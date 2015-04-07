@@ -305,7 +305,7 @@ void MainWindow::onValueChanged()
       // DFGWrapper::PortList ports = graph->getPorts();
       // for(size_t i=0;i<ports.size();i++)
       // {
-      //   if(ports[i]->getEndPointType() == FabricCore::DFGPortType_In)
+      //   if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
       //     continue;
       //   FabricCore::RTVal argVal = graph.getWrappedCoreBinding().getArgValue(ports[i]->getName());
       //   m_dfgWidget->getUIController()->log(argVal.getJSON().getStringCString());
@@ -329,7 +329,7 @@ void MainWindow::onStructureChanged()
     DFGWrapper::PortList ports = graph->getPorts();
     for(size_t i=0;i<ports.size();i++)
     {
-      if(ports[i]->getEndPointType() == FabricCore::DFGPortType_Out)
+      if(ports[i]->getPortType() == FabricCore::DFGPortType_In)
         continue;
       std::string portName = ports[i]->getName();
       if(portName != "timeline")
