@@ -67,7 +67,6 @@ MainWindow::MainWindow( QSettings *settings )
 
   QObject::connect(m_undoAction, SIGNAL(triggered()), this, SLOT(onUndo()));
   QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
-  QObject::connect(m_cutAction, SIGNAL(triggered()), this, SLOT(onCut()));
   QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
@@ -142,6 +141,8 @@ MainWindow::MainWindow( QSettings *settings )
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
     QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
 
@@ -247,6 +248,14 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
     pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
     m_dfgWidget->getTabSearchWidget()->showForSearch(pos);
   }
+  else if(hotkey == "copy")
+  {
+    m_dfgWidget->getUIController()->copy();
+  }
+  else if(hotkey == "paste")
+  {
+    m_dfgWidget->getUIController()->paste();
+  }
 }
 
 void MainWindow::onUndo()
@@ -259,22 +268,14 @@ void MainWindow::onRedo()
   m_stack.redo();
 }  
 
-void MainWindow::onCut()
-{
-}  
-
 void MainWindow::onCopy()
 {
-  QWidget *focusWidget = this->focusWidget();
-  if ( focusWidget )
-    printf("%s\n", focusWidget->objectName().toStdString().c_str() );
-  if ( DFG::DFGLogWidget *logWidget =
-    qobject_cast<DFG::DFGLogWidget *>( focusWidget ) )
-    logWidget->copy();
+  m_dfgWidget->getUIController()->copy();
 }  
 
 void MainWindow::onPaste()
 {
+  m_dfgWidget->getUIController()->paste();
 }
 
 void MainWindow::onFrameChanged(int frame)

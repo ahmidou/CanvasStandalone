@@ -41,7 +41,6 @@ public slots:
   void onSaveGraph();
   void onUndo();
   void onRedo();
-  void onCut();
   void onCopy();
   void onPaste();
   void onFrameChanged(int frame);
