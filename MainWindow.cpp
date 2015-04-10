@@ -474,7 +474,7 @@ void MainWindow::onSaveGraph()
 
   try
   {
-    std::string json = graph->exportJSON();
+    std::string json = binding.exportJSON();
     FILE * file = fopen(filePath.toUtf8().constData(), "wb");
     if(file)
     {
