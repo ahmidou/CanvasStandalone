@@ -330,7 +330,7 @@ void MainWindow::onStructureChanged()
     DFGWrapper::PortList ports = graph->getPorts();
     for(size_t i=0;i<ports.size();i++)
     {
-      if(ports[i]->getPortType() == FabricCore::DFGPortType_In)
+      if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
         continue;
       std::string portName = ports[i]->getName();
       if(portName != "timeline")
@@ -377,6 +377,9 @@ void MainWindow::onNewGraph()
 {
   delete(m_host);
 
+  m_stack.clear();
+  m_hasTimeLinePort = false;
+
   m_host = new DFGWrapper::Host(m_client);
   DFGWrapper::Binding binding = m_host->createBindingToNewGraph();
   DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
@@ -402,6 +405,9 @@ void MainWindow::onLoadGraph()
 
 void MainWindow::loadGraph( QString const &filePath )
 {
+  m_stack.clear();
+  m_hasTimeLinePort = false;
+
   delete(m_host);
 
   m_host = new DFGWrapper::Host(m_client);
@@ -442,6 +448,7 @@ void MainWindow::loadGraph( QString const &filePath )
         m_timeLine->updateTime(tl_current.toInt());
 
       emit contentChanged();
+      onStructureChanged();
     }
   }
   catch(FabricCore::Exception e)
