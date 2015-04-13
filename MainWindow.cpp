@@ -375,13 +375,17 @@ void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel
 
 void MainWindow::onNewGraph()
 {
+  DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+  binding.flush();
+
+  m_host->flushUndoRedo();
   delete(m_host);
 
   m_stack.clear();
   m_hasTimeLinePort = false;
 
   m_host = new DFGWrapper::Host(m_client);
-  DFGWrapper::Binding binding = m_host->createBindingToNewGraph();
+  binding = m_host->createBindingToNewGraph();
   DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
 
   m_dfgWidget->setGraph(m_host, binding, graph);
