@@ -261,11 +261,13 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
 void MainWindow::onUndo()
 {
   m_stack.undo();
+  onValueChanged();
 }  
 
 void MainWindow::onRedo()
 {
   m_stack.redo();
+  onValueChanged();
 }  
 
 void MainWindow::onCopy()
