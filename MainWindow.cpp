@@ -412,6 +412,10 @@ void MainWindow::loadGraph( QString const &filePath )
   m_stack.clear();
   m_hasTimeLinePort = false;
 
+  DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+  binding.flush();
+
+  m_host->flushUndoRedo();
   delete(m_host);
 
   m_host = new DFGWrapper::Host(m_client);
