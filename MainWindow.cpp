@@ -459,6 +459,8 @@ void MainWindow::loadGraph( QString const &filePath )
 
       emit contentChanged();
       onStructureChanged();
+
+      m_viewport->update();
     }
   }
   catch(FabricCore::Exception e)
