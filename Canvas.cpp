@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include <Core/Build.h>
 #include <FabricCore.h>
+#include <Style/FabricStyle.h>
 
 int main(int argc, char *argv[])
 {
@@ -8,6 +9,7 @@ int main(int argc, char *argv[])
   app.setOrganizationName( Fabric::companyNameNoInc );
   app.setApplicationName( "Fabric Canvas Standalone" );
   app.setApplicationVersion( Fabric::buildFullVersion );
+  app.setStyle(new FabricUI::Style::FabricStyle());
 
   QSettings settings;
   MainWindow mainWin( &settings );
