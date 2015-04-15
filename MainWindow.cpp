@@ -112,6 +112,7 @@ MainWindow::MainWindow( QSettings *settings )
     m_client.loadExtension("Parameters", "", false);
 
     m_manager = new ASTWrapper::KLASTManager(&m_client);
+    m_manager->loadAllExtensionsFromExtsPath();
 
     m_host = new DFGWrapper::Host(m_client);
 
