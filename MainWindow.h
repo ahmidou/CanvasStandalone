@@ -45,6 +45,7 @@ public slots:
   void onPaste();
   void onFrameChanged(int frame);
   void updateFPS();
+  void onLogWindow();
 
 signals:
   void contentChanged();
@@ -85,4 +86,5 @@ private:
   QAction *m_cutAction;
   QAction *m_copyAction;
   QAction *m_pasteAction;
+  QAction *m_logWindowAction;
 };

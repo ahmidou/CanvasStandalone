@@ -27,24 +27,8 @@ MainWindow::MainWindow( QSettings *settings )
 
   DFG::DFGConfig config;
 
-  // // palette
-  // QPalette pal = palette();
-  // pal.setColor(QPalette::Window, QColor(70, 70, 70));
-  // pal.setColor(QPalette::Base, QColor(50, 50, 50));
-  // pal.setColor(QPalette::AlternateBase, QColor(55, 55, 55));
-  // pal.setColor(QPalette::Text, QColor(255, 255, 255));
-  // pal.setColor(QPalette::WindowText, pal.color(QPalette::Text));
-  // pal.setColor(QPalette::Button, pal.color(QPalette::Base));
-  // pal.setColor(QPalette::ButtonText, pal.color(QPalette::Text));
-  // pal.setColor(QPalette::BrightText, pal.color(QPalette::Text));
-  // pal.setColor(QPalette::Highlight, pal.color(QPalette::Text).darker());
-  // pal.setColor(QPalette::HighlightedText, pal.color(QPalette::AlternateBase));
-  // setPalette(pal);
-  // menuBar()->setPalette(pal);
-  
   // top menu
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  // fileMenu->setPalette(pal);
   m_newGraphAction = fileMenu->addAction("New Graph");
   m_loadGraphAction = fileMenu->addAction("Load Graph");
   m_saveGraphAction = fileMenu->addAction("Save Graph As...");
@@ -57,7 +41,6 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-  // editMenu->setPalette(pal);
   m_undoAction = editMenu->addAction("Undo");
   m_redoAction = editMenu->addAction("Redo");
   editMenu->addSeparator();
@@ -69,6 +52,10 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
   QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
+
+  QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
+  m_logWindowAction = windowMenu->addAction("LogWidget");
+  QObject::connect(m_logWindowAction, SIGNAL(triggered()), this, SLOT(onLogWindow()));
 
   m_slowOperationLabel = new QLabel();
 
@@ -313,6 +300,17 @@ void MainWindow::onFrameChanged(int frame)
   }
 
   onValueChanged();
+}
+
+void MainWindow::onLogWindow()
+{
+  QDockWidget *logDock = new QDockWidget("Log", this);
+  logDock->setObjectName( "Log" );
+  // logDock->setFeatures( QDockWidget::DockWidgetMovable );
+  DFG::DFGLogWidget * logWidget = new DFG::DFGLogWidget(logDock);
+  logDock->setWidget(logWidget);
+  addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
+  logDock->setFloating(true);
 }
 
 void MainWindow::onValueChanged()
