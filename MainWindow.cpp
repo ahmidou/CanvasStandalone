@@ -98,24 +98,9 @@ MainWindow::MainWindow( QSettings *settings )
     m_client.loadExtension("Math", "", false);
     m_client.loadExtension("Parameters", "", false);
 
-#ifdef _WIN32
-    LARGE_INTEGER astManagerTicksPerSecond;
-    QueryPerformanceFrequency( &astManagerTicksPerSecond );
-    long double astSecondsPerTick = 1.0 / double(astManagerTicksPerSecond.QuadPart);
-
-    LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    long double astManagerStart = double(t.QuadPart) * astSecondsPerTick;
-#endif
-
     m_manager = new ASTWrapper::KLASTManager(&m_client);
-    m_manager->loadAllExtensionsFromExtsPath();
-
-#ifdef _WIN32
-    QueryPerformanceCounter(&t);
-    long double astManagerElapsed = double(t.QuadPart) * astSecondsPerTick - astManagerStart;
-    printf("[FABRIC:MT] KLASTManager: Loaded all extension AST in %f miliseconds.\n", (float)(astManagerElapsed * 1000.0));
-#endif
+    // FE-4147
+    // m_manager->loadAllExtensionsFromExtsPath();
 
     m_host = new DFGWrapper::Host(m_client);
 
