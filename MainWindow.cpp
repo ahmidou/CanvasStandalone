@@ -30,14 +30,17 @@ MainWindow::MainWindow( QSettings *settings )
   // top menu
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
   m_newGraphAction = fileMenu->addAction("New Graph");
-  m_loadGraphAction = fileMenu->addAction("Load Graph");
-  m_saveGraphAction = fileMenu->addAction("Save Graph As...");
+  m_loadGraphAction = fileMenu->addAction("Load Graph ...");
+  m_saveGraphAction = fileMenu->addAction("Save Graph");
+  m_saveGraphAction->setEnabled(false);
+  m_saveGraphAsAction = fileMenu->addAction("Save Graph As...");
   fileMenu->addSeparator();
   m_quitAction = fileMenu->addAction("Quit");
 
   QObject::connect(m_newGraphAction, SIGNAL(triggered()), this, SLOT(onNewGraph()));
   QObject::connect(m_loadGraphAction, SIGNAL(triggered()), this, SLOT(onLoadGraph()));
   QObject::connect(m_saveGraphAction, SIGNAL(triggered()), this, SLOT(onSaveGraph()));
+  QObject::connect(m_saveGraphAsAction, SIGNAL(triggered()), this, SLOT(onSaveGraphAs()));
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
@@ -132,6 +135,9 @@ MainWindow::MainWindow( QSettings *settings )
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
     m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
 
@@ -244,6 +250,18 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   else if(hotkey == "paste")
   {
     m_dfgWidget->getUIController()->paste();
+  }
+  else if(hotkey == "new scene")
+  {
+    onNewGraph();
+  }
+  else if(hotkey == "open scene")
+  {
+    onLoadGraph();
+  }
+  else if(hotkey == "save scene")
+  {
+    saveGraph(false);
   }
 }
 
@@ -377,6 +395,9 @@ void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel
 
 void MainWindow::onNewGraph()
 {
+  m_lastFileName = "";
+  m_saveGraphAction->setEnabled(false);
+  
   DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
   binding.flush();
 
@@ -407,6 +428,7 @@ void MainWindow::onLoadGraph()
     m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
     loadGraph( filePath );
   }
+  m_saveGraphAction->setEnabled(true);
 }
 
 void MainWindow::loadGraph( QString const &filePath )
@@ -467,14 +489,31 @@ void MainWindow::loadGraph( QString const &filePath )
   {
     printf("Exception: %s\n", e.getDesc_cstr());
   }
+
+  m_lastFileName = filePath;
+  m_saveGraphAction->setEnabled(true);
 }
 
 void MainWindow::onSaveGraph()
 {
-  QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-  QString filePath = QFileDialog::getSaveFileName(this, "Save preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
-  if(filePath.length() == 0)
-    return;
+  saveGraph(false);
+}
+
+void MainWindow::onSaveGraphAs()
+{
+  saveGraph(true);
+}
+
+void MainWindow::saveGraph(bool saveAs)
+{
+  QString filePath = m_lastFileName;
+  if(filePath.length() == 0 || saveAs)
+  {
+    QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
+    if(filePath.length() == 0)
+      return;
+  }
 
   QDir dir(filePath);
   dir.cdUp();
@@ -505,4 +544,7 @@ void MainWindow::onSaveGraph()
   {
     printf("Exception: %s\n", e.getDesc_cstr());
   }
+
+  m_lastFileName = filePath;
+  m_saveGraphAction->setEnabled(true);
 }

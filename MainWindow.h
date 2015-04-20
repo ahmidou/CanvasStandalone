@@ -39,6 +39,7 @@ public slots:
   void onNewGraph();
   void onLoadGraph();
   void onSaveGraph();
+  void onSaveGraphAs();
   void onUndo();
   void onRedo();
   void onCopy();
@@ -53,6 +54,7 @@ signals:
 protected:
 
   void closeEvent( QCloseEvent *event );
+  void saveGraph(bool saveAs);
 
 private:
 
@@ -80,6 +82,7 @@ private:
   QAction *m_newGraphAction;
   QAction *m_loadGraphAction;
   QAction *m_saveGraphAction;
+  QAction *m_saveGraphAsAction;
   QAction *m_quitAction;
   QAction *m_undoAction;
   QAction *m_redoAction;
@@ -87,4 +90,6 @@ private:
   QAction *m_copyAction;
   QAction *m_pasteAction;
   QAction *m_logWindowAction;
+
+  QString m_lastFileName;
 };
