@@ -15,6 +15,8 @@ MainWindow::MainWindow( QSettings *settings )
 {
   setWindowTitle("Fabric Canvas Standalone");
 
+  DFG::DFGGraph::setSettings(m_settings);
+
   DockOptions dockOpt = dockOptions();
   dockOpt |= AllowNestedDocks;
   dockOpt ^= AllowTabbedDocks;
@@ -418,6 +420,7 @@ void MainWindow::onNewGraph()
     DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
 
     m_dfgWidget->setGraph(m_host, binding, graph);
+    m_treeWidget->setHost(m_host);
     m_dfgValueEditor->onArgsChanged();
 
     emit contentChanged();
@@ -484,6 +487,7 @@ void MainWindow::loadGraph( QString const &filePath )
       DFGWrapper::Binding binding = m_host->createBindingFromJSON(json.c_str());
       DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
       m_dfgWidget->setGraph(m_host, binding, graph);
+      m_treeWidget->setHost(m_host);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->clearCommands();
       m_dfgWidget->getUIController()->execute();
