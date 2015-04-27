@@ -397,24 +397,39 @@ void MainWindow::onNewGraph()
 {
   m_lastFileName = "";
   m_saveGraphAction->setEnabled(false);
+
+  try
+  {
+    DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+    binding.flush();
+
+    m_dfgWidget->getUIController()->clearCommands();
+    m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
+    m_dfgValueEditor->onArgsChanged();
+
+    m_host->flushUndoRedo();
+    delete(m_host);
+
+    m_stack.clear();
+    m_hasTimeLinePort = false;
+
+    m_host = new DFGWrapper::Host(m_client);
+    binding = m_host->createBindingToNewGraph();
+    DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
+
+    m_dfgWidget->setGraph(m_host, binding, graph);
+    m_dfgValueEditor->onArgsChanged();
+
+    emit contentChanged();
+    onStructureChanged();
+
+    m_viewport->update();
+  }
+  catch(FabricCore::Exception e)
+  {
+    printf("Exception: %s\n", e.getDesc_cstr());
+  }
   
-  DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
-  binding.flush();
-
-  m_host->flushUndoRedo();
-  delete(m_host);
-
-  m_stack.clear();
-  m_hasTimeLinePort = false;
-
-  m_host = new DFGWrapper::Host(m_client);
-  binding = m_host->createBindingToNewGraph();
-  DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
-
-  m_dfgWidget->setGraph(m_host, binding, graph);
-  m_dfgWidget->getUIController()->clearCommands();
-  m_dfgValueEditor->onArgsChanged();
-  emit contentChanged();
 }
 
 void MainWindow::onLoadGraph()
@@ -436,16 +451,19 @@ void MainWindow::loadGraph( QString const &filePath )
   m_stack.clear();
   m_hasTimeLinePort = false;
 
-  DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
-  binding.flush();
-
-  m_host->flushUndoRedo();
-  delete(m_host);
-
-  m_host = new DFGWrapper::Host(m_client);
-
   try
   {
+    DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+    binding.flush();
+
+    m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
+    m_dfgValueEditor->onArgsChanged();
+
+    m_host->flushUndoRedo();
+    delete(m_host);
+
+    m_host = new DFGWrapper::Host(m_client);
+
     FILE * file = fopen(filePath.toUtf8().constData(), "rb");
     if(file)
     {
