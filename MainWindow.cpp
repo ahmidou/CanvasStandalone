@@ -297,7 +297,19 @@ void MainWindow::onFrameChanged(int frame)
   try
   {
     DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
-    binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
+    FabricCore::RTVal val = binding.getArgValue("timeline");
+    if(!val.isValid())
+      binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
+    else
+    {
+      std::string typeName = val.getTypeName().getStringCString();
+      if(typeName == "SInt32")
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
+      else if(typeName == "UInt32")
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructUInt32(m_client, frame));
+      else if(typeName == "Float32")
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructFloat32(m_client, frame));
+    }
   }
   catch(FabricCore::Exception e)
   {
@@ -358,7 +370,7 @@ void MainWindow::onStructureChanged()
       if(portName != "timeline")
         continue;
       std::string dataType = ports[i]->getResolvedType();
-      if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32")
+      if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
         continue;
       m_hasTimeLinePort = true;
       break;
