@@ -357,30 +357,32 @@ void MainWindow::onValueChanged()
 
 void MainWindow::onStructureChanged()
 {
-  m_hasTimeLinePort = false;
-  try
+  if(m_dfgWidget->getUIController()->isViewingRootGraph())
   {
-    DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-    DFGWrapper::PortList ports = graph->getPorts();
-    for(size_t i=0;i<ports.size();i++)
+    m_hasTimeLinePort = false;
+    try
     {
-      if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
-        continue;
-      std::string portName = ports[i]->getName();
-      if(portName != "timeline")
-        continue;
-      std::string dataType = ports[i]->getResolvedType();
-      if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
-        continue;
-      m_hasTimeLinePort = true;
-      break;
+      DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
+      DFGWrapper::PortList ports = graph->getPorts();
+      for(size_t i=0;i<ports.size();i++)
+      {
+        if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
+          continue;
+        std::string portName = ports[i]->getName();
+        if(portName != "timeline")
+          continue;
+        std::string dataType = ports[i]->getResolvedType();
+        if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
+          continue;
+        m_hasTimeLinePort = true;
+        break;
+      }
+    }
+    catch(FabricCore::Exception e)
+    {
+      m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
     }
   }
-  catch(FabricCore::Exception e)
-  {
-    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
-  }
-
   onValueChanged();
 }
 
@@ -404,7 +406,9 @@ void MainWindow::onNodeDoubleClicked(FabricUI::GraphView::Node * node)
 
 void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel)
 {
-  m_dfgValueEditor->setNode(DFGWrapper::NodePtr());
+  DFG::DFGController * ctrl = m_dfgWidget->getUIController();
+  if(ctrl->isViewingRootGraph())
+    m_dfgValueEditor->setNode(DFGWrapper::NodePtr());
 }
 
 void MainWindow::onNewGraph()
@@ -499,6 +503,11 @@ void MainWindow::loadGraph( QString const &filePath )
       DFGWrapper::Binding binding = m_host->createBindingFromJSON(json.c_str());
       DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
       m_dfgWidget->setGraph(m_host, binding, graph);
+
+      std::vector<std::string> errors = graph->getErrors();
+      for(size_t i=0;i<errors.size();i++)
+        m_dfgWidget->getUIController()->checkErrors();
+
       m_treeWidget->setHost(m_host);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->clearCommands();
