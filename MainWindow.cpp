@@ -423,7 +423,7 @@ void MainWindow::onNewGraph()
 
     m_dfgWidget->getUIController()->clearCommands();
     m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
-    m_dfgValueEditor->onArgsChanged();
+    m_dfgValueEditor->clear();
 
     m_host->flushUndoRedo();
     delete(m_host);
@@ -478,7 +478,7 @@ void MainWindow::loadGraph( QString const &filePath )
     binding.flush();
 
     m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
-    m_dfgValueEditor->onArgsChanged();
+    m_dfgValueEditor->clear();
 
     m_host->flushUndoRedo();
     delete(m_host);
