@@ -428,6 +428,8 @@ void MainWindow::onNewGraph()
     m_host->flushUndoRedo();
     delete(m_host);
 
+    m_viewport->clearInlineDrawing();
+
     m_stack.clear();
     m_hasTimeLinePort = false;
 
@@ -480,6 +482,8 @@ void MainWindow::loadGraph( QString const &filePath )
 
     m_host->flushUndoRedo();
     delete(m_host);
+
+    m_viewport->clearInlineDrawing();
 
     m_host = new DFGWrapper::Host(m_client);
 
