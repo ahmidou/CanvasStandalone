@@ -526,6 +526,25 @@ void MainWindow::loadGraph( QString const &filePath )
       if(tl_current.length() > 0)
         m_timeLine->updateTime(tl_current.toInt());
 
+      QString camera_mat44 = graph->getMetadata("camera_mat44");
+      QString camera_focalDistance = graph->getMetadata("camera_focalDistance");
+      if(camera_mat44.length() > 0 && camera_focalDistance.length() > 0)
+      {
+        try
+        {
+          FabricCore::RTVal mat44 = FabricCore::ConstructRTValFromJSON(m_client, "Mat44", camera_mat44.toUtf8().constData());
+          FabricCore::RTVal focalDistance = FabricCore::ConstructRTValFromJSON(m_client, "Float32", camera_focalDistance.toUtf8().constData());
+          FabricCore::RTVal camera = m_viewport->getCamera();
+          camera.callMethod("", "setFromMat44", 1, &mat44);
+          camera.callMethod("", "setFocalDistance", 1, &focalDistance);
+        }
+        catch(FabricCore::Exception e)
+        {
+          printf("Exception: %s\n", e.getDesc_cstr());
+        }
+        
+      }
+
       emit contentChanged();
       onStructureChanged();
 
@@ -576,6 +595,23 @@ void MainWindow::saveGraph(bool saveAs)
   graph->setMetadata("timeline_end", num.toUtf8().constData(), false);
   num.setNum(m_timeLine->getTime());
   graph->setMetadata("timeline_current", num.toUtf8().constData(), false);
+
+  try
+  {
+    FabricCore::RTVal camera = m_viewport->getCamera();
+    FabricCore::RTVal mat44 = camera.callMethod("Mat44", "getMat44", 0, 0);
+    FabricCore::RTVal focalDistance = camera.callMethod("Float32", "getFocalDistance", 0, 0);
+
+    if(mat44.isValid() && focalDistance.isValid())
+    {
+      graph->setMetadata("camera_mat44", mat44.getJSON().getStringCString(), false);
+      graph->setMetadata("camera_focalDistance", focalDistance.getJSON().getStringCString(), false);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    printf("Exception: %s\n", e.getDesc_cstr());
+  }
 
   try
   {
