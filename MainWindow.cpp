@@ -9,6 +9,7 @@
 #include <QtGui/QFileDialog>
 #include <QtGui/QVBoxLayout>
 #include <QtCore/QDir>
+#include <QtCore/QCoreApplication>
 
 MainWindow::MainWindow( QSettings *settings )
   : m_settings( settings )
@@ -429,8 +430,10 @@ void MainWindow::onNewGraph()
     delete(m_host);
 
     m_viewport->clearInlineDrawing();
-
     m_stack.clear();
+
+    QCoreApplication::processEvents();
+
     m_hasTimeLinePort = false;
 
     m_host = new DFGWrapper::Host(m_client);
@@ -469,7 +472,6 @@ void MainWindow::onLoadGraph()
 
 void MainWindow::loadGraph( QString const &filePath )
 {
-  m_stack.clear();
   m_hasTimeLinePort = false;
 
   try
@@ -484,6 +486,9 @@ void MainWindow::loadGraph( QString const &filePath )
     delete(m_host);
 
     m_viewport->clearInlineDrawing();
+    m_stack.clear();
+
+    QCoreApplication::processEvents();
 
     m_host = new DFGWrapper::Host(m_client);
 
