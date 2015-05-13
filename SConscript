@@ -6,6 +6,7 @@ import os
 Import(
   'env',
   'qtFlags',
+  'qtInstalledLibs',
   'qtMOCBuilder',
   'capiSharedFiles',
   'commandsFlags',
@@ -52,5 +53,6 @@ canvasStandaloneEnv.Depends(canvasStandalone, coreDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
+canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
 canvasStandaloneEnv.Alias('canvasStandalone', canvasStandalone)
 Return('canvasStandalone')
