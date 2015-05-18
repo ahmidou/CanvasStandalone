@@ -128,22 +128,6 @@ MainWindow::MainWindow( QSettings *settings )
     // graph view
     m_dfgWidget = new DFG::DFGWidget(NULL, &m_client, m_manager, m_host, binding, subGraph, &m_stack, config);
 
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
-    QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
-      this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
-
     QDockWidget *dfgDock = new QDockWidget("Canvas Graph", this);
     dfgDock->setObjectName( "Canvas Graph" );
     dfgDock->setFeatures( QDockWidget::DockWidgetMovable );
@@ -179,14 +163,16 @@ MainWindow::MainWindow( QSettings *settings )
 
     QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
-    QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)), this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
-    QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)), this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
+
+    QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)), 
+      this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
 
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
     restoreState( settings->value("mainWindow/state").toByteArray() );
 
     onFrameChanged(m_timeLine->getTime());
+    onGraphSet(m_dfgWidget->getUIGraph());
   }
   catch(FabricCore::Exception e)
   {
@@ -396,6 +382,35 @@ void MainWindow::updateFPS()
   caption.setNum(m_viewport->fps(), 'f', 2);
   caption += " FPS";
   m_fpsLabel->setText( caption );
+}
+
+void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
+{
+  if(graph)
+  {
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
+    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
+    QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
+      this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
+
+    QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
+      this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
+    QObject::connect(graph, SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)), 
+      this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
+    QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)), 
+      this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
+  }
 }
 
 void MainWindow::onNodeDoubleClicked(FabricUI::GraphView::Node * node)

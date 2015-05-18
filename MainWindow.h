@@ -33,6 +33,7 @@ public slots:
 
   void onValueChanged();
   void onStructureChanged();
+  void onGraphSet(FabricUI::GraphView::Graph * graph);
   void onNodeDoubleClicked(FabricUI::GraphView::Node * node);
   void onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel);
   void hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString);
