@@ -21,6 +21,7 @@ Import(
   'sceneGraphExtsFiles',
   'coreTestExts',
   'coreDFGPresets',
+  'extsDFGPresets',
   'sceneGraphExtsPresets',
   'buildOS',
   'buildObject',
@@ -50,6 +51,7 @@ canvasStandaloneEnv.Depends(canvasStandalone, capiSharedFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, coreTestExts)
 canvasStandaloneEnv.Depends(canvasStandalone, coreDFGPresets)
+canvasStandaloneEnv.Depends(canvasStandalone, extsDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
