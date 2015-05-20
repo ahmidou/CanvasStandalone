@@ -5,6 +5,7 @@
 import os
 Import(
   'env',
+  'stageDir',
   'qtFlags',
   'qtInstalledLibs',
   'qtMOCBuilder',
@@ -42,11 +43,19 @@ canvasStandaloneEnv.MergeFlags(uiFlags)
 canvasStandaloneEnv.MergeFlags(qtFlags)
 
 cppSources = [
+  canvasStandaloneEnv.SubstCoreMacros("Canvas.cpp", "Canvas.cpp.template"),
   canvasStandaloneEnv.Glob('*.cpp'),
   canvasStandaloneEnv.QTMOC(canvasStandaloneEnv.Glob('*.h')),
-  ]
+]
 
 canvasStandalone = canvasStandaloneEnv.StageEXE("canvas", [cppSources, buildObject])
+
+# install sources
+sourceDir = stageDir.Dir('Source').Dir('Apps').Dir('Canvas')
+canvasStandalone += canvasStandaloneEnv.Install(sourceDir, cppSources[0:2])
+canvasStandalone += canvasStandaloneEnv.Install(sourceDir, canvasStandaloneEnv.Glob('*.h'))
+canvasStandalone += canvasStandaloneEnv.Install(sourceDir, canvasStandaloneEnv.File('SConstruct'))
+
 canvasStandaloneEnv.Depends(canvasStandalone, capiSharedFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, coreTestExts)
@@ -57,4 +66,6 @@ canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
 canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
 canvasStandaloneEnv.Alias('canvasStandalone', canvasStandalone)
+
+
 Return('canvasStandalone')

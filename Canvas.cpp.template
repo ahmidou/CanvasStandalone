@@ -1,16 +1,13 @@
 #include "MainWindow.h"
-#include <Core/Build.h>
 #include <FabricCore.h>
 #include <Style/FabricStyle.h>
 
 int main(int argc, char *argv[])
 {
-  // QApplication::setGraphicsSystem("raster");
-
   QApplication app(argc, argv);
-  app.setOrganizationName( Fabric::companyNameNoInc );
+  app.setOrganizationName( "{{FABRIC_COMPANY_NAME_NO_INC}}" );
   app.setApplicationName( "Fabric Canvas Standalone" );
-  app.setApplicationVersion( Fabric::buildFullVersion );
+  app.setApplicationVersion( "{{FABRIC_VERSION_MAJ}}.{{FABRIC_VERSION_MIN}}.{{FABRIC_VERSION_REV}}{{FABRIC_VERSION_SUFFIX}}" );
   app.setStyle(new FabricUI::Style::FabricStyle());
 
   QSettings settings;
