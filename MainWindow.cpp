@@ -156,16 +156,18 @@ MainWindow::MainWindow( QSettings *settings )
     // graph view
     m_dfgWidget = new DFG::DFGWidget(NULL, &m_client, m_manager, m_host, binding, subGraph, &m_stack, config);
 
+    QDockWidget::DockWidgetFeatures dockFeatures = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
+
     QDockWidget *dfgDock = new QDockWidget("Canvas Graph", this);
     dfgDock->setObjectName( "Canvas Graph" );
-    dfgDock->setFeatures( QDockWidget::DockWidgetMovable );
+    dfgDock->setFeatures( dockFeatures );
     dfgDock->setWidget(m_dfgWidget);
     addDockWidget(Qt::BottomDockWidgetArea, dfgDock, Qt::Vertical);
 
     // timeline
     QDockWidget *timeLineDock = new QDockWidget("TimeLine", this);
     timeLineDock->setObjectName( "TimeLine" );
-    timeLineDock->setFeatures( QDockWidget::DockWidgetMovable );
+    timeLineDock->setFeatures( dockFeatures );
     m_timeLine = new Viewports::TimeLineWidget(timeLineDock);
     m_timeLine->setTimeRange(1, 50);
     timeLineDock->setWidget(m_timeLine);
@@ -174,7 +176,7 @@ MainWindow::MainWindow( QSettings *settings )
     // preset library
     QDockWidget *treeDock = new QDockWidget("Presets", this);
     treeDock->setObjectName( "Presets" );
-    treeDock->setFeatures( QDockWidget::DockWidgetMovable );
+    treeDock->setFeatures( dockFeatures );
     m_treeWidget = new DFG::PresetTreeWidget(treeDock, m_host);
     treeDock->setWidget(m_treeWidget);
     addDockWidget(Qt::LeftDockWidgetArea, treeDock);
@@ -184,7 +186,7 @@ MainWindow::MainWindow( QSettings *settings )
     // value editor
     QDockWidget *valueDock = new QDockWidget("Values", this);
     valueDock->setObjectName( "Values" );
-    valueDock->setFeatures( QDockWidget::DockWidgetMovable );
+    valueDock->setFeatures( dockFeatures );
     m_dfgValueEditor = new DFG::DFGValueEditor(valueDock, m_dfgWidget->getUIController(), config);
     valueDock->setWidget(m_dfgValueEditor);
     addDockWidget(Qt::RightDockWidgetArea, valueDock);
@@ -346,7 +348,6 @@ void MainWindow::onLogWindow()
 {
   QDockWidget *logDock = new QDockWidget("Log", this);
   logDock->setObjectName( "Log" );
-  // logDock->setFeatures( QDockWidget::DockWidgetMovable );
   DFG::DFGLogWidget * logWidget = new DFG::DFGLogWidget(logDock);
   logDock->setWidget(logWidget);
   addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
