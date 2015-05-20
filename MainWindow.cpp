@@ -252,6 +252,12 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     saveGraph(false);
   }
+  else if(hotkey == "rename node")
+  {
+    std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
+    if(nodes.size() > 0)
+      m_dfgWidget->onNodeToBeRenamed(nodes[0]);
+  }
 }
 
 void MainWindow::onUndo()
@@ -388,21 +394,21 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
 {
   if(graph)
   {
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
-    m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
-    QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
-      this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
+    GraphView::Graph * graph = m_dfgWidget->getUIGraph();
+    graph->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
+    graph->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
+    graph->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
+    graph->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
+    graph->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
+    graph->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
+    graph->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
+    graph->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
+    graph->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
+    graph->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
+    graph->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
+    graph->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
+    graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
+    graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
