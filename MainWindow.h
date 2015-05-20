@@ -4,6 +4,7 @@
 #include <QtGui/QDockWidget>
 #include <QtGui/QLabel>
 #include <QtGui/QStatusBar>
+#include <QtGui/QKeyEvent>
 
 #include <DFG/DFGUI.h>
 #include <DFG/DFGValueEditor.h>
@@ -18,9 +19,26 @@
 using namespace FabricServices;
 using namespace FabricUI;
 
+class MainWindow;
+
+class MainWindowEventFilter : public QObject
+{
+public:
+
+  MainWindowEventFilter(MainWindow * window);
+
+  bool eventFilter(QObject* object, QEvent* event);
+
+private:
+
+  MainWindow * m_window;
+};
+
 class MainWindow : public DFG::DFGMainWindow
 {
   Q_OBJECT
+
+  friend class MainWindowEventFilter;
   
 public:
 

@@ -11,6 +11,34 @@
 #include <QtCore/QDir>
 #include <QtCore/QCoreApplication>
 
+MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
+: QObject(window)
+{
+  m_window = window;
+}
+
+bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
+{
+  if (event->type() == QEvent::KeyPress) 
+  {
+    QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
+
+    // forward this to the hotkeyPressed functionality...
+    if(keyEvent->key() != Qt::Key_Tab)
+    {
+      m_window->m_viewport->onKeyPressed(keyEvent);
+      if(keyEvent->isAccepted())
+        return true;
+
+      m_window->m_dfgWidget->onKeyPressed(keyEvent);
+      if(keyEvent->isAccepted())
+        return true;
+    }  
+  }
+
+  return QObject::eventFilter(object, event);
+};
+
 MainWindow::MainWindow( QSettings *settings )
   : m_settings( settings )
 {
@@ -179,6 +207,8 @@ MainWindow::MainWindow( QSettings *settings )
     printf("Exception: %s\n", e.getDesc_cstr());
     close();
   }
+
+  installEventFilter(new MainWindowEventFilter(this));
 }
 
 void MainWindow::closeEvent( QCloseEvent *event )
