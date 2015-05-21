@@ -44,7 +44,7 @@ canvasStandaloneEnv.MergeFlags(qtFlags)
 
 cppSources = [
   canvasStandaloneEnv.SubstCoreMacros("Canvas.cpp", "Canvas.cpp.template"),
-  canvasStandaloneEnv.Glob('*.cpp'),
+  canvasStandaloneEnv.File('MainWindow.cpp'),
   canvasStandaloneEnv.QTMOC(canvasStandaloneEnv.Glob('*.h')),
 ]
 
