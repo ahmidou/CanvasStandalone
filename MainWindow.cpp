@@ -289,6 +289,10 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
     if(nodes.size() > 0)
       m_dfgWidget->onNodeToBeRenamed(nodes[0]);
   }
+  else if(hotkey == "relax nodes")
+  {
+    m_dfgWidget->getUIController()->relaxNodes();
+  }
 }
 
 void MainWindow::onUndo()
@@ -439,6 +443,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
+    graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
