@@ -364,7 +364,7 @@ void MainWindow::onValueChanged()
     try
     {
       // DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-      // DFGWrapper::PortList ports = graph->getPorts();
+      // DFGWrapper::ExecPortList ports = graph->getPorts();
       // for(size_t i=0;i<ports.size();i++)
       // {
       //   if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
@@ -390,7 +390,7 @@ void MainWindow::onStructureChanged()
     try
     {
       DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-      DFGWrapper::PortList ports = graph->getPorts();
+      DFGWrapper::ExecPortList ports = graph->getPorts();
       for(size_t i=0;i<ports.size();i++)
       {
         if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
