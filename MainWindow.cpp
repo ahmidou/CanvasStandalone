@@ -393,7 +393,7 @@ void MainWindow::onStructureChanged()
       DFGWrapper::ExecPortList ports = graph->getPorts();
       for(size_t i=0;i<ports.size();i++)
       {
-        if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
+        if(ports[i]->getOutsidePortType() == FabricCore::DFGPortType_Out)
           continue;
         std::string portName = ports[i]->getName();
         if(portName != "timeline")
