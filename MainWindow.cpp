@@ -390,12 +390,12 @@ void MainWindow::onStructureChanged()
     try
     {
       DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-      DFGWrapper::ExecPortList ports = graph->getPorts();
+      DFGWrapper::ExecPortList ports = graph->getExecPorts();
       for(size_t i=0;i<ports.size();i++)
       {
-        if(ports[i]->getOutsidePortType() == FabricCore::DFGPortType_Out)
+        if(ports[i]->getExecPortType() == FabricCore::DFGPortType_Out)
           continue;
-        std::string portName = ports[i]->getName();
+        std::string portName = ports[i]->getPortName();
         if(portName != "timeline")
           continue;
         std::string dataType = ports[i]->getResolvedType();
