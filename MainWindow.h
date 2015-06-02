@@ -10,7 +10,6 @@
 #include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 
-#include <DFGWrapper/DFGWrapper.h>
 #include <ASTWrapper/KLASTManager.h>
 
 #include <Viewports/TimeLineWidget.h>
@@ -81,7 +80,7 @@ private:
 
   FabricCore::Client m_client;
   ASTWrapper::KLASTManager * m_manager;
-  DFGWrapper::Host * m_host;
+  FabricCore::DFGHost m_host;
   DFG::PresetTreeWidget * m_treeWidget;
   Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;

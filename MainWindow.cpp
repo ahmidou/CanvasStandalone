@@ -104,8 +104,6 @@ MainWindow::MainWindow( QSettings *settings )
   m_slowOperationTimer = new QTimer( this );
   connect( m_slowOperationTimer, SIGNAL( timeout() ), m_slowOperationDialog, SLOT( show() ) );
 
-  m_host = NULL;
-
   m_statusBar = new QStatusBar(this);
   m_fpsLabel = new QLabel( m_statusBar );
   m_statusBar->addPermanentWidget( m_fpsLabel );
@@ -135,11 +133,11 @@ MainWindow::MainWindow( QSettings *settings )
     // FE-4147
     // m_manager->loadAllExtensionsFromExtsPath();
 
-    m_host = new DFGWrapper::Host(m_client);
+    m_host = m_client.getDFGHost();
 
-    DFGWrapper::Binding binding = m_host->createBindingToNewGraph();
+    FabricCore::DFGBinding binding = m_host.createBindingToNewGraph();
 
-    DFGWrapper::GraphExecutablePtr subGraph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
+    FabricCore::DFGExec graph = binding.getExec();
 
     QGLFormat glFormat;
     glFormat.setDoubleBuffer(true);
@@ -153,7 +151,16 @@ MainWindow::MainWindow( QSettings *settings )
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
 
     // graph view
-    m_dfgWidget = new DFG::DFGWidget(NULL, &m_client, m_manager, m_host, binding, subGraph, &m_stack, config);
+    m_dfgWidget = new DFG::DFGWidget(
+      NULL,
+      m_client,
+      m_host,
+      binding,
+      graph,
+      m_manager,
+      &m_stack,
+      config
+      );
 
     QDockWidget::DockWidgetFeatures dockFeatures = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
 
@@ -221,8 +228,6 @@ void MainWindow::closeEvent( QCloseEvent *event )
 
  MainWindow::~MainWindow()
 {
-  if(m_host)
-    delete(m_host);
   if(m_manager)
     delete(m_manager);
 }
@@ -324,7 +329,7 @@ void MainWindow::onFrameChanged(int frame)
 
   try
   {
-    DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+    FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getCoreDFGBinding();
     FabricCore::RTVal val = binding.getArgValue("timeline");
     if(!val.isValid())
       binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
@@ -363,7 +368,7 @@ void MainWindow::onValueChanged()
   {
     try
     {
-      // DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
+      // FabricCore::DFGExec graph = m_dfgWidget->getUIController()->getView()->getGraph();
       // DFGWrapper::ExecPortList ports = graph->getPorts();
       // for(size_t i=0;i<ports.size();i++)
       // {
@@ -389,16 +394,17 @@ void MainWindow::onStructureChanged()
     m_hasTimeLinePort = false;
     try
     {
-      DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-      DFGWrapper::ExecPortList ports = graph->getExecPorts();
-      for(size_t i=0;i<ports.size();i++)
+      FabricCore::DFGExec graph =
+        m_dfgWidget->getUIController()->getView()->getCoreDFGGraph();
+      unsigned portCount = graph.getExecPortCount();
+      for(unsigned i=0;i<portCount;i++)
       {
-        if(ports[i]->getExecPortType() == FabricCore::DFGPortType_Out)
+        if(graph.getExecPortType(i) == FabricCore::DFGPortType_Out)
           continue;
-        std::string portName = ports[i]->getPortName();
+        FTL::StrRef portName = graph.getExecPortName(i);
         if(portName != "timeline")
           continue;
-        std::string dataType = ports[i]->getResolvedType();
+        FTL::StrRef dataType = graph.getExecPortResolvedType(i);
         if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
           continue;
         m_hasTimeLinePort = true;
@@ -454,18 +460,20 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
   }
 }
 
-void MainWindow::onNodeDoubleClicked(FabricUI::GraphView::Node * node)
+void MainWindow::onNodeDoubleClicked(
+  FabricUI::GraphView::Node *node
+  )
 {
-  DFGWrapper::GraphExecutablePtr graph = m_dfgWidget->getUIController()->getView()->getGraph();
-  DFGWrapper::NodePtr codeNode = graph->getNode(node->name().toUtf8().constData());
-  m_dfgValueEditor->setNode(codeNode);
+  FabricCore::DFGExec coreDFGGraph =
+    m_dfgWidget->getUIController()->getView()->getCoreDFGGraph();
+  m_dfgValueEditor->setNodeName( node->name() );
 }
 
 void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel)
 {
   DFG::DFGController * ctrl = m_dfgWidget->getUIController();
   if(ctrl->isViewingRootGraph())
-    m_dfgValueEditor->setNode(DFGWrapper::NodePtr());
+    m_dfgValueEditor->setNodeName( 0 );
 }
 
 void MainWindow::onNewGraph()
@@ -475,15 +483,15 @@ void MainWindow::onNewGraph()
 
   try
   {
-    DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+    FabricCore::DFGBinding binding =
+      m_dfgWidget->getUIController()->getCoreDFGBinding();
     binding.flush();
 
     m_dfgWidget->getUIController()->clearCommands();
-    m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
+    m_dfgWidget->setGraph( m_host, FabricCore::DFGBinding(), FabricCore::DFGExec() );
     m_dfgValueEditor->clear();
 
-    m_host->flushUndoRedo();
-    delete(m_host);
+    m_host.flushUndoRedo();
 
     m_viewport->clearInlineDrawing();
     m_stack.clear();
@@ -492,9 +500,8 @@ void MainWindow::onNewGraph()
 
     m_hasTimeLinePort = false;
 
-    m_host = new DFGWrapper::Host(m_client);
-    binding = m_host->createBindingToNewGraph();
-    DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
+    binding = m_host.createBindingToNewGraph();
+    FabricCore::DFGExec graph = binding.getExec();
 
     m_dfgWidget->setGraph(m_host, binding, graph);
     m_treeWidget->setHost(m_host);
@@ -532,21 +539,21 @@ void MainWindow::loadGraph( QString const &filePath )
 
   try
   {
-    DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
+    FabricCore::DFGBinding binding =
+      m_dfgWidget->getUIController()->getCoreDFGBinding();
     binding.flush();
 
-    m_dfgWidget->setGraph(m_host, DFGWrapper::Binding(), DFGWrapper::GraphExecutablePtr());
+    m_dfgWidget->setGraph(
+      m_host, FabricCore::DFGBinding(), FabricCore::DFGExec()
+      );
     m_dfgValueEditor->clear();
 
-    m_host->flushUndoRedo();
-    delete(m_host);
+    m_host.flushUndoRedo();
 
     m_viewport->clearInlineDrawing();
     m_stack.clear();
 
     QCoreApplication::processEvents();
-
-    m_host = new DFGWrapper::Host(m_client);
 
     FILE * file = fopen(filePath.toUtf8().constData(), "rb");
     if(file)
@@ -565,13 +572,12 @@ void MainWindow::loadGraph( QString const &filePath )
       std::string json = buffer;
       free(buffer);
   
-      DFGWrapper::Binding binding = m_host->createBindingFromJSON(json.c_str());
-      DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
-      m_dfgWidget->setGraph(m_host, binding, graph);
+      FabricCore::DFGBinding binding =
+        m_host.createBindingFromJSON( json.c_str() );
+      FabricCore::DFGExec graph = binding.getExec();
+      m_dfgWidget->setGraph( m_host, binding, graph );
 
-      std::vector<std::string> errors = graph->getErrors();
-      for(size_t i=0;i<errors.size();i++)
-        m_dfgWidget->getUIController()->checkErrors();
+      m_dfgWidget->getUIController()->checkErrors();
 
       m_treeWidget->setHost(m_host);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
@@ -579,16 +585,16 @@ void MainWindow::loadGraph( QString const &filePath )
       m_dfgWidget->getUIController()->execute();
       m_dfgValueEditor->onArgsChanged();
 
-      QString tl_start = graph->getMetadata("timeline_start");
-      QString tl_end = graph->getMetadata("timeline_end");
-      QString tl_current = graph->getMetadata("timeline_current");
+      QString tl_start = graph.getMetadata("timeline_start");
+      QString tl_end = graph.getMetadata("timeline_end");
+      QString tl_current = graph.getMetadata("timeline_current");
       if(tl_start.length() > 0 && tl_end.length() > 0)
         m_timeLine->setTimeRange(tl_start.toInt(), tl_end.toInt());
       if(tl_current.length() > 0)
         m_timeLine->updateTime(tl_current.toInt());
 
-      QString camera_mat44 = graph->getMetadata("camera_mat44");
-      QString camera_focalDistance = graph->getMetadata("camera_focalDistance");
+      QString camera_mat44 = graph.getMetadata("camera_mat44");
+      QString camera_focalDistance = graph.getMetadata("camera_focalDistance");
       if(camera_mat44.length() > 0 && camera_focalDistance.length() > 0)
       {
         try
@@ -646,16 +652,16 @@ void MainWindow::saveGraph(bool saveAs)
   dir.cdUp();
   m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
 
-  DFGWrapper::Binding binding = m_dfgWidget->getUIController()->getBinding();
-  DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
+  FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getCoreDFGBinding();
+  FabricCore::DFGExec graph = binding.getExec();
 
   QString num;
   num.setNum(m_timeLine->getRangeStart());
-  graph->setMetadata("timeline_start", num.toUtf8().constData(), false);
+  graph.setMetadata("timeline_start", num.toUtf8().constData(), false);
   num.setNum(m_timeLine->getRangeEnd());
-  graph->setMetadata("timeline_end", num.toUtf8().constData(), false);
+  graph.setMetadata("timeline_end", num.toUtf8().constData(), false);
   num.setNum(m_timeLine->getTime());
-  graph->setMetadata("timeline_current", num.toUtf8().constData(), false);
+  graph.setMetadata("timeline_current", num.toUtf8().constData(), false);
 
   try
   {
@@ -665,8 +671,8 @@ void MainWindow::saveGraph(bool saveAs)
 
     if(mat44.isValid() && focalDistance.isValid())
     {
-      graph->setMetadata("camera_mat44", mat44.getJSON().getStringCString(), false);
-      graph->setMetadata("camera_focalDistance", focalDistance.getJSON().getStringCString(), false);
+      graph.setMetadata("camera_mat44", mat44.getJSON().getStringCString(), false);
+      graph.setMetadata("camera_focalDistance", focalDistance.getJSON().getStringCString(), false);
     }
   }
   catch(FabricCore::Exception e)
@@ -676,11 +682,14 @@ void MainWindow::saveGraph(bool saveAs)
 
   try
   {
-    std::string json = binding.exportJSON();
+    FabricCore::DFGStringResult json = binding.exportJSON();
+    char const *jsonData;
+    uint32_t jsonSize;
+    json.getStringDataAndLength( jsonData, jsonSize );
     FILE * file = fopen(filePath.toUtf8().constData(), "wb");
     if(file)
     {
-      fwrite(json.c_str(), json.length(), 1, file);
+      fwrite(jsonData, jsonSize, 1, file);
       fclose(file);
     }
   }
