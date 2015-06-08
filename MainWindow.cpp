@@ -368,7 +368,7 @@ void MainWindow::onValueChanged()
   {
     try
     {
-      // FabricCore::DFGExec graph = m_dfgWidget->getUIController()->getView()->getGraph();
+      // FabricCore::DFGExec graph = m_dfgWidget->getUIController()->getGraph();
       // DFGWrapper::ExecPortList ports = graph->getPorts();
       // for(size_t i=0;i<ports.size();i++)
       // {
@@ -395,7 +395,7 @@ void MainWindow::onStructureChanged()
     try
     {
       FabricCore::DFGExec graph =
-        m_dfgWidget->getUIController()->getView()->getCoreDFGGraph();
+        m_dfgWidget->getUIController()->getCoreDFGExec();
       unsigned portCount = graph.getExecPortCount();
       for(unsigned i=0;i<portCount;i++)
       {
@@ -465,7 +465,7 @@ void MainWindow::onNodeDoubleClicked(
   )
 {
   FabricCore::DFGExec coreDFGGraph =
-    m_dfgWidget->getUIController()->getView()->getCoreDFGGraph();
+    m_dfgWidget->getUIController()->getCoreDFGExec();
   m_dfgValueEditor->setNodeName( node->name() );
 }
 
