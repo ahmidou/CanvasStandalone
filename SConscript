@@ -19,11 +19,11 @@ Import(
   'splitSearchFlags',
   'splitSearchFiles',
   'codeCompletionFlags',
-  'sceneGraphExtsFiles',
+  'extsFiles',
   'coreTestExts',
   'coreDFGPresets',
-  'extsDFGPresets',
-  'sceneGraphExtsPresets',
+  'extsAdditionalDFGPresets',
+  'extsGeneratedDFGPresets',
   'buildOS',
   'buildObject',
   'dfgSamples',
@@ -57,11 +57,11 @@ canvasStandalone += canvasStandaloneEnv.Install(sourceDir, canvasStandaloneEnv.G
 canvasStandalone += canvasStandaloneEnv.Install(sourceDir, canvasStandaloneEnv.File('SConstruct'))
 
 canvasStandaloneEnv.Depends(canvasStandalone, capiSharedFiles)
-canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsFiles)
+canvasStandaloneEnv.Depends(canvasStandalone, extsFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, coreTestExts)
 canvasStandaloneEnv.Depends(canvasStandalone, coreDFGPresets)
-canvasStandaloneEnv.Depends(canvasStandalone, extsDFGPresets)
-canvasStandaloneEnv.Depends(canvasStandalone, sceneGraphExtsPresets)
+canvasStandaloneEnv.Depends(canvasStandalone, extsAdditionalDFGPresets)
+canvasStandaloneEnv.Depends(canvasStandalone, extsGeneratedDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
 canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
