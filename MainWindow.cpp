@@ -212,8 +212,7 @@ MainWindow::MainWindow( QSettings *settings )
   }
   catch(FabricCore::Exception e)
   {
-    printf("Exception: %s\n", e.getDesc_cstr());
-    close();
+    throw e;
   }
 
   installEventFilter(new MainWindowEventFilter(this));
