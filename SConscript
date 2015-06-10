@@ -66,6 +66,7 @@ canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
 canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
 canvasStandaloneEnv.Alias('canvasStandalone', canvasStandalone)
+canvasStandaloneEnv.Alias('canvas', canvasStandalone)
 
 
 Return('canvasStandalone')
