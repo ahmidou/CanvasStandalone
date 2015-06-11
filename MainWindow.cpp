@@ -43,7 +43,7 @@ MainWindow::MainWindow( QSettings *settings )
 {
   setWindowTitle("Fabric Canvas Standalone");
 
-  DFG::DFGGraph::setSettings(m_settings);
+  DFG::DFGWidget::setSettings(m_settings);
 
   DockOptions dockOpt = dockOptions();
   dockOpt |= AllowNestedDocks;
