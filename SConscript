@@ -11,7 +11,6 @@ Import(
   'qtMOCBuilder',
   'capiSharedFiles',
   'commandsFlags',
-  'dfgWrapperFlags',
   'uiFlags',
   'capiSharedLibFlags',
   'astWrapperFlags',
@@ -36,7 +35,6 @@ canvasStandaloneEnv.MergeFlags(commandsFlags)
 canvasStandaloneEnv.MergeFlags(capiSharedLibFlags)
 canvasStandaloneEnv.MergeFlags(legacyBoostFlags)
 canvasStandaloneEnv.MergeFlags(splitSearchFlags)
-canvasStandaloneEnv.MergeFlags(dfgWrapperFlags)
 canvasStandaloneEnv.MergeFlags(astWrapperFlags)
 canvasStandaloneEnv.MergeFlags(codeCompletionFlags)
 canvasStandaloneEnv.MergeFlags(uiFlags)
