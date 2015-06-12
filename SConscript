@@ -47,7 +47,7 @@ cppSources = [
 ]
 
 canvasStandalone = canvasStandaloneEnv.StageEXE("canvas", [cppSources, buildObject])
-
+  
 # install sources
 sourceDir = stageDir.Dir('Source').Dir('Apps').Dir('Canvas')
 canvasStandalone += canvasStandaloneEnv.Install(sourceDir, cppSources[0:2])

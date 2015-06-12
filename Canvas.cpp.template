@@ -1,6 +1,6 @@
 #include "MainWindow.h"
 #include <FabricCore.h>
-#include <Style/FabricStyle.h>
+#include <FabricUI/Style/FabricStyle.h>
 
 int main(int argc, char *argv[])
 {

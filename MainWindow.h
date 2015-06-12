@@ -6,14 +6,14 @@
 #include <QtGui/QStatusBar>
 #include <QtGui/QKeyEvent>
 
-#include <DFG/DFGUI.h>
-#include <DFG/DFGValueEditor.h>
+#include <FabricUI/DFG/DFGUI.h>
+#include <FabricUI/DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 
 #include <ASTWrapper/KLASTManager.h>
 
-#include <Viewports/TimeLineWidget.h>
-#include <Viewports/GLViewportWidget.h>
+#include <FabricUI/Viewports/TimeLineWidget.h>
+#include <FabricUI/Viewports/GLViewportWidget.h>
 
 using namespace FabricServices;
 using namespace FabricUI;

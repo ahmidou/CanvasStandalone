@@ -1,5 +1,5 @@
 #include "MainWindow.h"
-#include <DFG/DFGLogWidget.h>
+#include <FabricUI/DFG/DFGLogWidget.h>
 
 #include <QtCore/QTimer>
 #include <QtGui/QMenuBar>
