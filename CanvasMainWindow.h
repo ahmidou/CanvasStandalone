@@ -1,13 +1,19 @@
+//
+// Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+//
+
 #include <QtCore/QSettings>
 #include <QtGui/QApplication>
-#include <QtGui/QMainWindow>
 #include <QtGui/QDockWidget>
-#include <QtGui/QLabel>
-#include <QtGui/QStatusBar>
 #include <QtGui/QKeyEvent>
+#include <QtGui/QLabel>
+#include <QtGui/QMainWindow>
+#include <QtGui/QStatusBar>
+#include <QtGui/QUndoStack>
 
 #include <FabricUI/DFG/DFGUI.h>
 #include <FabricUI/DFG/DFGValueEditor.h>
+#include <FabricUI/DFG/DFGUICmdHandler_QUndo.h>
 #include <Commands/CommandStack.h>
 
 #include <ASTWrapper/KLASTManager.h>
@@ -58,13 +64,10 @@ public slots:
   void onLoadGraph();
   void onSaveGraph();
   void onSaveGraphAs();
-  void onUndo();
-  void onRedo();
   void onCopy();
   void onPaste();
   void onFrameChanged(int frame);
   void updateFPS();
-  void onLogWindow();
 
 signals:
   void contentChanged();
@@ -75,6 +78,9 @@ protected:
   void saveGraph(bool saveAs);
 
 private:
+
+  QUndoStack m_qUndoStack;
+  DFG::DFGUICmdHandler_QUndo m_dfguiCommandHandler;
 
   QSettings *m_settings;
 
@@ -102,12 +108,9 @@ private:
   QAction *m_saveGraphAction;
   QAction *m_saveGraphAsAction;
   QAction *m_quitAction;
-  QAction *m_undoAction;
-  QAction *m_redoAction;
   QAction *m_cutAction;
   QAction *m_copyAction;
   QAction *m_pasteAction;
-  QAction *m_logWindowAction;
 
   QString m_lastFileName;
 };

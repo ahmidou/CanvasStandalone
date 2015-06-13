@@ -1,14 +1,20 @@
-#include "MainWindow.h"
+//
+// Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+//
+
+#include "CanvasMainWindow.h"
+
 #include <FabricUI/DFG/DFGLogWidget.h>
 
+#include <QtCore/QCoreApplication>
+#include <QtCore/QDir>
 #include <QtCore/QTimer>
-#include <QtGui/QMenuBar>
-#include <QtGui/QMenu>
 #include <QtGui/QAction>
 #include <QtGui/QFileDialog>
+#include <QtGui/QMenu>
+#include <QtGui/QMenuBar>
+#include <QtGui/QUndoView>
 #include <QtGui/QVBoxLayout>
-#include <QtCore/QDir>
-#include <QtCore/QCoreApplication>
 
 MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
 : QObject(window)
@@ -39,7 +45,8 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
 };
 
 MainWindow::MainWindow( QSettings *settings )
-  : m_settings( settings )
+  : m_dfguiCommandHandler( &m_qUndoStack )
+  , m_settings( settings )
 {
   setWindowTitle("Fabric Canvas Standalone");
 
@@ -74,21 +81,17 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-  m_undoAction = editMenu->addAction("Undo");
-  m_redoAction = editMenu->addAction("Redo");
+  editMenu->addAction( m_qUndoStack.createUndoAction( editMenu ) );
+  editMenu->addAction( m_qUndoStack.createRedoAction( editMenu ) );
   editMenu->addSeparator();
   m_cutAction = editMenu->addAction("Cut");
   m_copyAction = editMenu->addAction("Copy");
   m_pasteAction = editMenu->addAction("Paste");
 
-  QObject::connect(m_undoAction, SIGNAL(triggered()), this, SLOT(onUndo()));
-  QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
   QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
-  m_logWindowAction = windowMenu->addAction("LogWidget");
-  QObject::connect(m_logWindowAction, SIGNAL(triggered()), this, SLOT(onLogWindow()));
 
   m_slowOperationLabel = new QLabel();
 
@@ -156,8 +159,10 @@ MainWindow::MainWindow( QSettings *settings )
       m_client,
       m_host,
       binding,
+      "",
       graph,
       m_manager,
+      &m_dfguiCommandHandler,
       &m_stack,
       config
       );
@@ -197,6 +202,32 @@ MainWindow::MainWindow( QSettings *settings )
     m_dfgValueEditor = new DFG::DFGValueEditor(valueDock, m_dfgWidget->getUIController(), config);
     valueDock->setWidget(m_dfgValueEditor);
     addDockWidget(Qt::RightDockWidgetArea, valueDock);
+
+    // log widget
+    QDockWidget *logDock = new QDockWidget("Log", this);
+    logDock->setObjectName( "Log" );
+    logDock->setFeatures( dockFeatures );
+    DFG::DFGLogWidget *logWidget = new DFG::DFGLogWidget(logDock);
+    logDock->setWidget(logWidget);
+    addDockWidget(Qt::TopDockWidgetArea, logDock);
+    QAction *logWindowAction = windowMenu->addAction("LogWidget");
+    QObject::connect(
+      logWindowAction, SIGNAL(triggered()),
+      logWidget, SLOT(show())
+      );
+
+    // undo widget
+    QDockWidget *undoDock = new QDockWidget("History", this);
+    undoDock->setObjectName( "History" );
+    undoDock->setFeatures( dockFeatures );
+    QUndoView *qUndoView = new QUndoView( &m_qUndoStack );
+    undoDock->setWidget(qUndoView);
+    addDockWidget(Qt::LeftDockWidgetArea, undoDock);
+    QAction *undoWindowAction = windowMenu->addAction("UndoWidget");
+    QObject::connect(
+      undoWindowAction, SIGNAL(triggered()),
+      qUndoView, SLOT(show())
+      );
 
     QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
@@ -238,18 +269,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   if(hotkey == "delete" || hotkey == "delete2")
   {
     std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
-    m_dfgWidget->getUIController()->beginInteraction();
-    for(size_t i=0;i<nodes.size();i++)
-      m_dfgWidget->getUIController()->removeNode(nodes[i]);
-    m_dfgWidget->getUIController()->endInteraction();
-  }
-  else if(hotkey == "undo")
-  {
-    onUndo();
-  }
-  else if(hotkey == "redo")
-  {
-    onRedo();
+    m_dfgWidget->getUIController()->gvcDoRemoveNodes(nodes);
   }
   else if(hotkey == "execute")
   {
@@ -301,18 +321,6 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
 }
 
-void MainWindow::onUndo()
-{
-  m_stack.undo();
-  onValueChanged();
-}  
-
-void MainWindow::onRedo()
-{
-  m_stack.redo();
-  onValueChanged();
-}  
-
 void MainWindow::onCopy()
 {
   m_dfgWidget->getUIController()->copy();
@@ -330,7 +338,7 @@ void MainWindow::onFrameChanged(int frame)
 
   try
   {
-    FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getCoreDFGBinding();
+    FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
     FabricCore::RTVal val = binding.getArgValue("timeline");
     if(!val.isValid())
       binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
@@ -351,16 +359,6 @@ void MainWindow::onFrameChanged(int frame)
   }
 
   onValueChanged();
-}
-
-void MainWindow::onLogWindow()
-{
-  QDockWidget *logDock = new QDockWidget("Log", this);
-  logDock->setObjectName( "Log" );
-  DFG::DFGLogWidget * logWidget = new DFG::DFGLogWidget(logDock);
-  logDock->setWidget(logWidget);
-  addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
-  logDock->setFloating(true);
 }
 
 void MainWindow::onValueChanged()
@@ -396,7 +394,7 @@ void MainWindow::onStructureChanged()
     try
     {
       FabricCore::DFGExec graph =
-        m_dfgWidget->getUIController()->getCoreDFGExec();
+        m_dfgWidget->getUIController()->getExec();
       unsigned portCount = graph.getExecPortCount();
       for(unsigned i=0;i<portCount;i++)
       {
@@ -466,7 +464,7 @@ void MainWindow::onNodeDoubleClicked(
   )
 {
   FabricCore::DFGExec coreDFGGraph =
-    m_dfgWidget->getUIController()->getCoreDFGExec();
+    m_dfgWidget->getUIController()->getExec();
   m_dfgValueEditor->setNodeName( node->name() );
 }
 
@@ -484,12 +482,13 @@ void MainWindow::onNewGraph()
 
   try
   {
-    FabricCore::DFGBinding binding =
-      m_dfgWidget->getUIController()->getCoreDFGBinding();
-    binding.flush();
+    m_dfgWidget->getUIController()->getBinding().flush();
+
+    FabricCore::DFGBinding binding;
+    FabricCore::DFGExec exec;
 
     m_dfgWidget->getUIController()->clearCommands();
-    m_dfgWidget->setGraph( m_host, FabricCore::DFGBinding(), FabricCore::DFGExec() );
+    m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -502,9 +501,9 @@ void MainWindow::onNewGraph()
     m_hasTimeLinePort = false;
 
     binding = m_host.createBindingToNewGraph();
-    FabricCore::DFGExec graph = binding.getExec();
+    exec = binding.getExec();
 
-    m_dfgWidget->setGraph(m_host, binding, graph);
+    m_dfgWidget->setGraph(m_host, binding, FTL::StrRef(), exec);
     m_treeWidget->setHost(m_host);
     m_treeWidget->setBinding(binding);
     m_dfgValueEditor->onArgsChanged();
@@ -541,13 +540,12 @@ void MainWindow::loadGraph( QString const &filePath )
 
   try
   {
-    FabricCore::DFGBinding binding =
-      m_dfgWidget->getUIController()->getCoreDFGBinding();
-    binding.flush();
+    m_dfgWidget->getUIController()->getBinding().flush();
 
-    m_dfgWidget->setGraph(
-      m_host, FabricCore::DFGBinding(), FabricCore::DFGExec()
-      );
+    FabricCore::DFGBinding binding;
+    FabricCore::DFGExec exec;
+    
+    m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -574,10 +572,9 @@ void MainWindow::loadGraph( QString const &filePath )
       std::string json = buffer;
       free(buffer);
   
-      FabricCore::DFGBinding binding =
-        m_host.createBindingFromJSON( json.c_str() );
-      FabricCore::DFGExec graph = binding.getExec();
-      m_dfgWidget->setGraph( m_host, binding, graph );
+      binding = m_host.createBindingFromJSON( json.c_str() );
+      exec = binding.getExec();
+      m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
 
       m_dfgWidget->getUIController()->checkErrors();
 
@@ -588,16 +585,16 @@ void MainWindow::loadGraph( QString const &filePath )
       m_dfgWidget->getUIController()->execute();
       m_dfgValueEditor->onArgsChanged();
 
-      QString tl_start = graph.getMetadata("timeline_start");
-      QString tl_end = graph.getMetadata("timeline_end");
-      QString tl_current = graph.getMetadata("timeline_current");
+      QString tl_start = exec.getMetadata("timeline_start");
+      QString tl_end = exec.getMetadata("timeline_end");
+      QString tl_current = exec.getMetadata("timeline_current");
       if(tl_start.length() > 0 && tl_end.length() > 0)
         m_timeLine->setTimeRange(tl_start.toInt(), tl_end.toInt());
       if(tl_current.length() > 0)
         m_timeLine->updateTime(tl_current.toInt());
 
-      QString camera_mat44 = graph.getMetadata("camera_mat44");
-      QString camera_focalDistance = graph.getMetadata("camera_focalDistance");
+      QString camera_mat44 = exec.getMetadata("camera_mat44");
+      QString camera_focalDistance = exec.getMetadata("camera_focalDistance");
       if(camera_mat44.length() > 0 && camera_focalDistance.length() > 0)
       {
         try
@@ -655,7 +652,8 @@ void MainWindow::saveGraph(bool saveAs)
   dir.cdUp();
   m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
 
-  FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getCoreDFGBinding();
+  FabricCore::DFGBinding &binding =
+    m_dfgWidget->getUIController()->getBinding();
   FabricCore::DFGExec graph = binding.getExec();
 
   QString num;

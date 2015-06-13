@@ -1,4 +1,8 @@
-#include "MainWindow.h"
+//
+// Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+//
+
+#include "CanvasMainWindow.h"
 #include <FabricCore.h>
 #include <FabricUI/Style/FabricStyle.h>
 
