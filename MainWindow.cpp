@@ -180,10 +180,11 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
 
     // preset library
-    QDockWidget *treeDock = new QDockWidget("Presets", this);
-    treeDock->setObjectName( "Presets" );
+    QDockWidget *treeDock = new QDockWidget("Explorer", this);
+    treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
     m_treeWidget = new DFG::PresetTreeWidget(treeDock, m_host);
+    m_treeWidget->setBinding(binding);
     treeDock->setWidget(m_treeWidget);
     addDockWidget(Qt::LeftDockWidgetArea, treeDock);
 
@@ -200,6 +201,7 @@ MainWindow::MainWindow( QSettings *settings )
     QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
+    QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
 
     QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)), 
       this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
@@ -504,6 +506,7 @@ void MainWindow::onNewGraph()
 
     m_dfgWidget->setGraph(m_host, binding, graph);
     m_treeWidget->setHost(m_host);
+    m_treeWidget->setBinding(binding);
     m_dfgValueEditor->onArgsChanged();
 
     emit contentChanged();
@@ -579,6 +582,7 @@ void MainWindow::loadGraph( QString const &filePath )
       m_dfgWidget->getUIController()->checkErrors();
 
       m_treeWidget->setHost(m_host);
+      m_treeWidget->setBinding(binding);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->clearCommands();
       m_dfgWidget->getUIController()->execute();
