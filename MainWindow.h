@@ -85,6 +85,7 @@ private:
   Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;
   DFG::DFGValueEditor * m_dfgValueEditor;
+  FabricUI::GraphView::Graph * m_setGraph;
   Viewports::GLViewportWidget * m_viewport;
   Viewports::TimeLineWidget * m_timeLine;
   bool m_hasTimeLinePort;

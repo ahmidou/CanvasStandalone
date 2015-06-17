@@ -54,6 +54,7 @@ MainWindow::MainWindow( QSettings *settings )
   m_timeLine = NULL;
   m_dfgWidget = NULL;
   m_dfgValueEditor = NULL;
+  m_setGraph = NULL;
 
   DFG::DFGConfig config;
 
@@ -433,7 +434,7 @@ void MainWindow::updateFPS()
 
 void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
 {
-  if(graph)
+  if(graph != m_setGraph)
   {
     GraphView::Graph * graph = m_dfgWidget->getUIGraph();
     graph->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
@@ -458,6 +459,8 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
       this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
     QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)), 
       this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
+
+    m_setGraph = graph;
   }
 }
 
