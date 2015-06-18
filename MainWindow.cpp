@@ -81,6 +81,7 @@ MainWindow::MainWindow( QSettings *settings )
   m_cutAction = editMenu->addAction("Cut");
   m_copyAction = editMenu->addAction("Copy");
   m_pasteAction = editMenu->addAction("Paste");
+  m_manipAction = editMenu->addAction("Toggle Manipulation");
 
   QObject::connect(m_undoAction, SIGNAL(triggered()), this, SLOT(onUndo()));
   QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
@@ -203,6 +204,7 @@ MainWindow::MainWindow( QSettings *settings )
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
+    QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
 
     QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)), 
       this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
@@ -223,6 +225,7 @@ MainWindow::MainWindow( QSettings *settings )
 
 void MainWindow::closeEvent( QCloseEvent *event )
 {
+  m_viewport->setManipulationActive(false);
   m_settings->setValue( "mainWindow/geometry", saveGeometry() );
   m_settings->setValue( "mainWindow/state", saveState() );
   QMainWindow::closeEvent( event );

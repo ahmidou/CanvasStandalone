@@ -108,6 +108,7 @@ private:
   QAction *m_cutAction;
   QAction *m_copyAction;
   QAction *m_pasteAction;
+  QAction *m_manipAction;
   QAction *m_logWindowAction;
 
   QString m_lastFileName;
