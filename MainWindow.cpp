@@ -60,9 +60,9 @@ MainWindow::MainWindow( QSettings *settings )
 
   // top menu
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  m_newGraphAction = fileMenu->addAction("New Graph");
-  m_loadGraphAction = fileMenu->addAction("Load Graph ...");
-  m_saveGraphAction = fileMenu->addAction("Save Graph");
+  m_newGraphAction = fileMenu->addAction("New Graph (Ctrl-N)");
+  m_loadGraphAction = fileMenu->addAction("Load Graph ... (Ctrl-O)");
+  m_saveGraphAction = fileMenu->addAction("Save Graph (Ctrl-S)");
   m_saveGraphAction->setEnabled(false);
   m_saveGraphAsAction = fileMenu->addAction("Save Graph As...");
   fileMenu->addSeparator();
@@ -75,13 +75,13 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-  m_undoAction = editMenu->addAction("Undo");
-  m_redoAction = editMenu->addAction("Redo");
+  m_undoAction = editMenu->addAction("Undo (Ctrl-Z)");
+  m_redoAction = editMenu->addAction("Redo (Ctrl-Y)");
   editMenu->addSeparator();
-  m_cutAction = editMenu->addAction("Cut");
-  m_copyAction = editMenu->addAction("Copy");
-  m_pasteAction = editMenu->addAction("Paste");
-  m_manipAction = editMenu->addAction("Toggle Manipulation");
+  m_cutAction = editMenu->addAction("Cut (Ctrl-X)");
+  m_copyAction = editMenu->addAction("Copy (Ctrl-C)");
+  m_pasteAction = editMenu->addAction("Paste (Ctrl-V)");
+  m_manipAction = editMenu->addAction("Toggle Manipulation (Q)");
 
   QObject::connect(m_undoAction, SIGNAL(triggered()), this, SLOT(onUndo()));
   QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
@@ -303,6 +303,10 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->getUIController()->relaxNodes();
   }
+  else if(hotkey == "toggle manipulation")
+  {
+    m_viewport->toggleManipulation();
+  }
 }
 
 void MainWindow::onUndo()
@@ -455,6 +459,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
+    graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
