@@ -81,6 +81,7 @@ private:
   FabricCore::Client m_client;
   ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGHost m_host;
+  FabricCore::RTVal m_evalContext;
   DFG::PresetTreeWidget * m_treeWidget;
   Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;

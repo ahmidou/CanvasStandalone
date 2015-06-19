@@ -130,10 +130,17 @@ MainWindow::MainWindow( QSettings *settings )
       );
     m_client.loadExtension("Math", "", false);
     m_client.loadExtension("Parameters", "", false);
+    m_client.loadExtension("Util", "", false);
 
     m_manager = new ASTWrapper::KLASTManager(&m_client);
     // FE-4147
     // m_manager->loadAllExtensionsFromExtsPath();
+
+    // construct the eval context rtval
+    m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+    m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+    m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Canvas"));
+    m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, ""));
 
     m_host = m_client.getDFGHost();
 
@@ -333,6 +340,15 @@ void MainWindow::onPaste()
 
 void MainWindow::onFrameChanged(int frame)
 {
+  try
+  {
+    m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, frame));
+  }
+  catch(FabricCore::Exception e)
+  {
+    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
+  }
+
   if(!m_hasTimeLinePort)
     return;
 
@@ -592,6 +608,8 @@ void MainWindow::loadGraph( QString const &filePath )
 
       m_dfgWidget->getUIController()->checkErrors();
 
+      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
+
       m_treeWidget->setHost(m_host);
       m_treeWidget->setBinding(binding);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
@@ -705,6 +723,8 @@ void MainWindow::saveGraph(bool saveAs)
     {
       fwrite(jsonData, jsonSize, 1, file);
       fclose(file);
+
+      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
     }
   }
   catch(FabricCore::Exception e)
