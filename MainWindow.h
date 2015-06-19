@@ -65,6 +65,7 @@ public slots:
   void onFrameChanged(int frame);
   void updateFPS();
   void onLogWindow();
+  void onPortManipulationRequested(QString portName);
 
 signals:
   void contentChanged();

@@ -158,6 +158,7 @@ MainWindow::MainWindow( QSettings *settings )
     m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this);
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
+    QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
@@ -385,6 +386,43 @@ void MainWindow::onLogWindow()
   logDock->setWidget(logWidget);
   addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
   logDock->setFloating(true);
+}
+
+void MainWindow::onPortManipulationRequested(QString portName)
+{
+  try
+  {
+    DFG::DFGController * controller = m_dfgWidget->getUIController();
+    FabricCore::DFGBinding binding = controller->getCoreDFGBinding();
+    FabricCore::DFGExec exec = binding.getExec();
+    FTL::StrRef portResolvedType = exec.getExecPortResolvedType(portName.toUtf8().constData());
+    FabricCore::RTVal value = m_viewport->getManipTool()->getLastManipVal();
+    if(portResolvedType == "Xfo")
+    {
+      // pass
+    }
+    else if(portResolvedType == "Mat44")
+      value = value.callMethod("Mat44", "toMat44", 0, 0);
+    else if(portResolvedType == "Vec3")
+      value = value.maybeGetMember("tr");
+    else if(portResolvedType == "Quat")
+      value = value.maybeGetMember("ori");
+    else
+    {
+      QString message = "Port '"+portName;
+      message += "'to be driven has unsupported type '";
+      message += portResolvedType.data();
+      message += "'.";
+      m_dfgWidget->getUIController()->logError(message.toUtf8().constData());
+      return;
+    }
+    controller->setArg(portName.toUtf8().constData(), value);
+    controller->execute();
+  }
+  catch(FabricCore::Exception e)
+  {
+    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
+  }
 }
 
 void MainWindow::onValueChanged()
