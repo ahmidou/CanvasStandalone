@@ -45,6 +45,10 @@ public:
   ~MainWindow();
 
   void loadGraph( QString const &filePath );
+  static void CoreStatusCallback( void *userdata, char const *destinationData,
+                                  uint32_t destinationLength,
+                                  char const *payloadData,
+                                  uint32_t payloadLength );
 
 public slots:
 
