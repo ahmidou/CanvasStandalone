@@ -530,6 +530,9 @@ void MainWindow::onNodeDoubleClicked(
   FabricUI::GraphView::Node *node
   )
 {
+  if(node->type() == GraphView::QGraphicsItemType_BackDropNode)
+    return;
+
   FabricCore::DFGExec coreDFGGraph =
     m_dfgWidget->getUIController()->getCoreDFGExec();
   m_dfgValueEditor->setNodeName( node->name() );
