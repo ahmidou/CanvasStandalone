@@ -69,6 +69,7 @@ public slots:
   void onFrameChanged(int frame);
   void updateFPS();
   void onLogWindow();
+  void onPortManipulationRequested(QString portName);
 
 signals:
   void contentChanged();
@@ -85,6 +86,7 @@ private:
   FabricCore::Client m_client;
   ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGHost m_host;
+  FabricCore::RTVal m_evalContext;
   DFG::PresetTreeWidget * m_treeWidget;
   Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;
@@ -112,6 +114,7 @@ private:
   QAction *m_cutAction;
   QAction *m_copyAction;
   QAction *m_pasteAction;
+  QAction *m_manipAction;
   QAction *m_logWindowAction;
 
   QString m_lastFileName;

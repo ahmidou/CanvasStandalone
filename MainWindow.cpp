@@ -83,9 +83,9 @@ MainWindow::MainWindow( QSettings *settings )
 
   // top menu
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  m_newGraphAction = fileMenu->addAction("New Graph");
-  m_loadGraphAction = fileMenu->addAction("Load Graph ...");
-  m_saveGraphAction = fileMenu->addAction("Save Graph");
+  m_newGraphAction = fileMenu->addAction("New Graph (Ctrl-N)");
+  m_loadGraphAction = fileMenu->addAction("Load Graph ... (Ctrl-O)");
+  m_saveGraphAction = fileMenu->addAction("Save Graph (Ctrl-S)");
   m_saveGraphAction->setEnabled(false);
   m_saveGraphAsAction = fileMenu->addAction("Save Graph As...");
   fileMenu->addSeparator();
@@ -98,12 +98,13 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-  m_undoAction = editMenu->addAction("Undo");
-  m_redoAction = editMenu->addAction("Redo");
+  m_undoAction = editMenu->addAction("Undo (Ctrl-Z)");
+  m_redoAction = editMenu->addAction("Redo (Ctrl-Y)");
   editMenu->addSeparator();
-  m_cutAction = editMenu->addAction("Cut");
-  m_copyAction = editMenu->addAction("Copy");
-  m_pasteAction = editMenu->addAction("Paste");
+  m_cutAction = editMenu->addAction("Cut (Ctrl-X)");
+  m_copyAction = editMenu->addAction("Copy (Ctrl-C)");
+  m_pasteAction = editMenu->addAction("Paste (Ctrl-V)");
+  m_manipAction = editMenu->addAction("Toggle Manipulation (Q)");
 
   QObject::connect(m_undoAction, SIGNAL(triggered()), this, SLOT(onUndo()));
   QObject::connect(m_redoAction, SIGNAL(triggered()), this, SLOT(onRedo()));
@@ -152,11 +153,18 @@ MainWindow::MainWindow( QSettings *settings )
       );
     m_client.loadExtension("Math", "", false);
     m_client.loadExtension("Parameters", "", false);
+    m_client.loadExtension("Util", "", false);
     m_client.setStatusCallback( &MainWindow::CoreStatusCallback, this );
 
     m_manager = new ASTWrapper::KLASTManager(&m_client);
     // FE-4147
     // m_manager->loadAllExtensionsFromExtsPath();
+
+    // construct the eval context rtval
+    m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+    m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+    m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Canvas"));
+    m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, ""));
 
     m_host = m_client.getDFGHost();
 
@@ -174,6 +182,7 @@ MainWindow::MainWindow( QSettings *settings )
     m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this);
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
+    QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
@@ -227,6 +236,7 @@ MainWindow::MainWindow( QSettings *settings )
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
+    QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
 
     QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)), 
       this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
@@ -247,6 +257,7 @@ MainWindow::MainWindow( QSettings *settings )
 
 void MainWindow::closeEvent( QCloseEvent *event )
 {
+  m_viewport->setManipulationActive(false);
   m_settings->setValue( "mainWindow/geometry", saveGeometry() );
   m_settings->setValue( "mainWindow/state", saveState() );
   QMainWindow::closeEvent( event );
@@ -324,6 +335,10 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->getUIController()->relaxNodes();
   }
+  else if(hotkey == "toggle manipulation")
+  {
+    m_viewport->toggleManipulation();
+  }
 }
 
 void MainWindow::onUndo()
@@ -350,6 +365,15 @@ void MainWindow::onPaste()
 
 void MainWindow::onFrameChanged(int frame)
 {
+  try
+  {
+    m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, frame));
+  }
+  catch(FabricCore::Exception e)
+  {
+    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
+  }
+
   if(!m_hasTimeLinePort)
     return;
 
@@ -386,6 +410,43 @@ void MainWindow::onLogWindow()
   logDock->setWidget(logWidget);
   addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
   logDock->setFloating(true);
+}
+
+void MainWindow::onPortManipulationRequested(QString portName)
+{
+  try
+  {
+    DFG::DFGController * controller = m_dfgWidget->getUIController();
+    FabricCore::DFGBinding binding = controller->getCoreDFGBinding();
+    FabricCore::DFGExec exec = binding.getExec();
+    FTL::StrRef portResolvedType = exec.getExecPortResolvedType(portName.toUtf8().constData());
+    FabricCore::RTVal value = m_viewport->getManipTool()->getLastManipVal();
+    if(portResolvedType == "Xfo")
+    {
+      // pass
+    }
+    else if(portResolvedType == "Mat44")
+      value = value.callMethod("Mat44", "toMat44", 0, 0);
+    else if(portResolvedType == "Vec3")
+      value = value.maybeGetMember("tr");
+    else if(portResolvedType == "Quat")
+      value = value.maybeGetMember("ori");
+    else
+    {
+      QString message = "Port '"+portName;
+      message += "'to be driven has unsupported type '";
+      message += portResolvedType.data();
+      message += "'.";
+      m_dfgWidget->getUIController()->logError(message.toUtf8().constData());
+      return;
+    }
+    controller->setArg(portName.toUtf8().constData(), value);
+    controller->execute();
+  }
+  catch(FabricCore::Exception e)
+  {
+    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
+  }
 }
 
 void MainWindow::onValueChanged()
@@ -476,6 +537,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
+    graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
@@ -492,6 +554,9 @@ void MainWindow::onNodeDoubleClicked(
   FabricUI::GraphView::Node *node
   )
 {
+  if(node->type() == GraphView::QGraphicsItemType_BackDropNode)
+    return;
+
   FabricCore::DFGExec coreDFGGraph =
     m_dfgWidget->getUIController()->getCoreDFGExec();
   m_dfgValueEditor->setNodeName( node->name() );
@@ -608,6 +673,8 @@ void MainWindow::loadGraph( QString const &filePath )
 
       m_dfgWidget->getUIController()->checkErrors();
 
+      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
+
       m_treeWidget->setHost(m_host);
       m_treeWidget->setBinding(binding);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
@@ -721,6 +788,8 @@ void MainWindow::saveGraph(bool saveAs)
     {
       fwrite(jsonData, jsonSize, 1, file);
       fclose(file);
+
+      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
     }
   }
   catch(FabricCore::Exception e)
