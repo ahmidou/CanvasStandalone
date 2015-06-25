@@ -2,6 +2,7 @@
 #include <FabricUI/DFG/DFGLogWidget.h>
 #include <Persistence/RTValToJSONEncoder.hpp>
 #include <Persistence/RTValFromJSONDecoder.hpp>
+#include <FabricUI/Licensing/Licensing.h>
 
 #include <QtCore/QTimer>
 #include <QtGui/QMenuBar>
@@ -14,6 +15,28 @@
 
 FabricServices::Persistence::RTValToJSONEncoder sRTValEncoder;
 FabricServices::Persistence::RTValFromJSONDecoder sRTValDecoder;
+
+void MainWindow::CoreStatusCallback(
+  void *userdata,
+  char const *destinationData, uint32_t destinationLength,
+  char const *payloadData, uint32_t payloadLength
+  )
+{
+  MainWindow *mainWindow = reinterpret_cast<MainWindow *>( userdata );
+  FTL::StrRef destination( destinationData, destinationLength );
+  FTL::StrRef payload( payloadData, payloadLength );
+  if ( destination == FTL_STR( "licensing" ) )
+  {
+    try
+    {
+      FabricUI::HandleLicenseData( mainWindow, mainWindow->m_client, payload );
+    }
+    catch ( FabricCore::Exception e )
+    {
+      DFG::DFGLogWidget::log( e.getDesc_cstr() );
+    }
+  }
+}
 
 MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
 : QObject(window)
@@ -138,6 +161,7 @@ MainWindow::MainWindow( QSettings *settings )
     m_client.loadExtension("Math", "", false);
     m_client.loadExtension("Parameters", "", false);
     m_client.loadExtension("Util", "", false);
+    m_client.setStatusCallback( &MainWindow::CoreStatusCallback, this );
 
     m_manager = new ASTWrapper::KLASTManager(&m_client);
     // FE-4147
