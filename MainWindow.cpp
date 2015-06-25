@@ -1,5 +1,7 @@
 #include "MainWindow.h"
 #include <FabricUI/DFG/DFGLogWidget.h>
+#include <Persistence/RTValToJSONEncoder.hpp>
+#include <Persistence/RTValFromJSONDecoder.hpp>
 
 #include <QtCore/QTimer>
 #include <QtGui/QMenuBar>
@@ -9,6 +11,9 @@
 #include <QtGui/QVBoxLayout>
 #include <QtCore/QDir>
 #include <QtCore/QCoreApplication>
+
+FabricServices::Persistence::RTValToJSONEncoder sRTValEncoder;
+FabricServices::Persistence::RTValFromJSONDecoder sRTValDecoder;
 
 MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
 : QObject(window)
@@ -123,6 +128,8 @@ MainWindow::MainWindow( QSettings *settings )
     options.guarded = 1;
     options.optimizationType = FabricCore::ClientOptimizationType_Background;
     options.licenseType = FabricCore::ClientLicenseType_Interactive;
+    options.rtValToJSONEncoder = &sRTValEncoder;
+    options.rtValFromJSONDecoder = &sRTValDecoder;
     m_client = FabricCore::Client(
       &DFG::DFGLogWidget::callback,
       0,
