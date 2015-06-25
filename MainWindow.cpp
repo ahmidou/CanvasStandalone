@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 #include <FabricUI/DFG/DFGLogWidget.h>
-#include <Persistence/RTValToJSONEncoder.hpp>
-#include <Persistence/RTValFromJSONDecoder.hpp>
+#include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
+#include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
 
 #include <QtCore/QTimer>
