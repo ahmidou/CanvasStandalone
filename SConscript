@@ -22,7 +22,6 @@ Import(
   'extsFiles',
   'coreTestExts',
   'coreDFGPresets',
-  'extsAdditionalDFGPresets',
   'extsGeneratedDFGPresets',
   'buildOS',
   'buildObject',
@@ -61,7 +60,6 @@ canvasStandaloneEnv.Depends(canvasStandalone, capiSharedFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, extsFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, coreTestExts)
 canvasStandaloneEnv.Depends(canvasStandalone, coreDFGPresets)
-canvasStandaloneEnv.Depends(canvasStandalone, extsAdditionalDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, extsGeneratedDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
