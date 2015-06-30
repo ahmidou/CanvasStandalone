@@ -11,6 +11,7 @@ Import(
   'qtMOCBuilder',
   'capiSharedFiles',
   'commandsFlags',
+  'persistenceFlags',
   'uiFlags',
   'capiSharedLibFlags',
   'astWrapperFlags',
@@ -26,12 +27,14 @@ Import(
   'buildOS',
   'buildObject',
   'dfgSamples',
+  'allServicesLibFiles'
   )
 
 canvasStandaloneEnv = env.Clone()
 canvasStandaloneEnv.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 canvasStandaloneEnv.MergeFlags(commandsFlags)
+canvasStandaloneEnv.MergeFlags(persistenceFlags)
 canvasStandaloneEnv.MergeFlags(capiSharedLibFlags)
 canvasStandaloneEnv.MergeFlags(legacyBoostFlags)
 canvasStandaloneEnv.MergeFlags(splitSearchFlags)
@@ -63,6 +66,7 @@ canvasStandaloneEnv.Depends(canvasStandalone, extsGeneratedDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
 canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
+canvasStandaloneEnv.Depends(canvasStandalone, allServicesLibFiles)
 canvasStandaloneEnv.Alias('canvasStandalone', canvasStandalone)
 canvasStandaloneEnv.Alias('canvas', canvasStandalone)
 

@@ -51,6 +51,10 @@ public:
   ~MainWindow();
 
   void loadGraph( QString const &filePath );
+  static void CoreStatusCallback( void *userdata, char const *destinationData,
+                                  uint32_t destinationLength,
+                                  char const *payloadData,
+                                  uint32_t payloadLength );
 
 public slots:
 
@@ -68,6 +72,8 @@ public slots:
   void onPaste();
   void onFrameChanged(int frame);
   void updateFPS();
+  void onLogWindow();
+  void onPortManipulationRequested(QString portName);
 
 signals:
   void contentChanged();
@@ -87,10 +93,12 @@ private:
   FabricCore::Client m_client;
   ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGHost m_host;
+  FabricCore::RTVal m_evalContext;
   DFG::PresetTreeWidget * m_treeWidget;
   Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;
   DFG::DFGValueEditor * m_dfgValueEditor;
+  FabricUI::GraphView::Graph * m_setGraph;
   Viewports::GLViewportWidget * m_viewport;
   Viewports::TimeLineWidget * m_timeLine;
   bool m_hasTimeLinePort;
@@ -111,6 +119,8 @@ private:
   QAction *m_cutAction;
   QAction *m_copyAction;
   QAction *m_pasteAction;
+  QAction *m_manipAction;
+  QAction *m_logWindowAction;
 
   QString m_lastFileName;
 };
