@@ -69,7 +69,7 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
 MainWindow::MainWindow( QSettings *settings )
   : m_settings( settings )
 {
-  setWindowTitle("Fabric Canvas Standalone");
+  setWindowTitle("Fabric Standalone");
 
   DFG::DFGWidget::setSettings(m_settings);
 
