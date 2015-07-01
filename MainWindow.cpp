@@ -69,7 +69,7 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
 MainWindow::MainWindow( QSettings *settings )
   : m_settings( settings )
 {
-  setWindowTitle("Fabric Standalone");
+  setWindowTitle("Fabric Engine");
 
   DFG::DFGWidget::setSettings(m_settings);
 
