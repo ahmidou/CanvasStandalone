@@ -561,7 +561,7 @@ void MainWindow::onNodeDoubleClicked(
   FabricUI::GraphView::Node *node
   )
 {
-  if(node->type() == GraphView::QGraphicsItemType_BackDropNode)
+  if ( node->isBackDropNode() )
     return;
 
   FabricCore::DFGExec coreDFGGraph =
