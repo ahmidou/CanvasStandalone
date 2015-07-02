@@ -76,7 +76,7 @@ MainWindow::MainWindow( QSettings *settings )
   : m_dfguiCommandHandler( &m_qUndoStack )
   , m_settings( settings )
 {
-  setWindowTitle("Fabric Canvas Standalone");
+  setWindowTitle("Fabric Engine");
 
   DFG::DFGWidget::setSettings(m_settings);
 
@@ -569,7 +569,7 @@ void MainWindow::onNodeDoubleClicked(
   FabricUI::GraphView::Node *node
   )
 {
-  if(node->type() == GraphView::QGraphicsItemType_BackDropNode)
+  if ( node->isBackDropNode() )
     return;
 
   FabricCore::DFGExec coreDFGGraph =
