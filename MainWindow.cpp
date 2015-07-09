@@ -197,6 +197,7 @@ MainWindow::MainWindow( QSettings *settings )
       m_client,
       m_host,
       binding,
+      FTL::StrRef(),
       graph,
       m_manager,
       &m_stack,
@@ -224,8 +225,7 @@ MainWindow::MainWindow( QSettings *settings )
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
-    m_treeWidget = new DFG::PresetTreeWidget(treeDock, m_host);
-    m_treeWidget->setBinding(binding);
+    m_treeWidget = new DFG::PresetTreeWidget( treeDock, m_dfgWidget->getDFGController() );
     treeDock->setWidget(m_treeWidget);
     addDockWidget(Qt::LeftDockWidgetArea, treeDock);
 
@@ -583,12 +583,13 @@ void MainWindow::onNewGraph()
 
   try
   {
-    FabricCore::DFGBinding binding =
-      m_dfgWidget->getUIController()->getCoreDFGBinding();
+    FabricUI::DFG::DFGController *dfgController =
+      m_dfgWidget->getUIController();
+
+    FabricCore::DFGBinding binding = dfgController->getCoreDFGBinding();
     binding.flush();
 
-    m_dfgWidget->getUIController()->clearCommands();
-    m_dfgWidget->setGraph( m_host, FabricCore::DFGBinding(), FabricCore::DFGExec() );
+    dfgController->clearCommands();
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -601,11 +602,10 @@ void MainWindow::onNewGraph()
     m_hasTimeLinePort = false;
 
     binding = m_host.createBindingToNewGraph();
-    FabricCore::DFGExec graph = binding.getExec();
+    FabricCore::DFGExec exec = binding.getExec();
 
-    m_dfgWidget->setGraph(m_host, binding, graph);
-    m_treeWidget->setHost(m_host);
-    m_treeWidget->setBinding(binding);
+    dfgController->setBindingExec( binding, FTL::StrRef(), exec );
+
     m_dfgValueEditor->onArgsChanged();
 
     emit contentChanged();
@@ -640,13 +640,12 @@ void MainWindow::loadGraph( QString const &filePath )
 
   try
   {
-    FabricCore::DFGBinding binding =
-      m_dfgWidget->getUIController()->getCoreDFGBinding();
+    FabricUI::DFG::DFGController *dfgController =
+      m_dfgWidget->getUIController();
+
+    FabricCore::DFGBinding binding = dfgController->getCoreDFGBinding();
     binding.flush();
 
-    m_dfgWidget->setGraph(
-      m_host, FabricCore::DFGBinding(), FabricCore::DFGExec()
-      );
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -675,30 +674,28 @@ void MainWindow::loadGraph( QString const &filePath )
   
       FabricCore::DFGBinding binding =
         m_host.createBindingFromJSON( json.c_str() );
-      FabricCore::DFGExec graph = binding.getExec();
-      m_dfgWidget->setGraph( m_host, binding, graph );
+      FabricCore::DFGExec exec = binding.getExec();
+      dfgController->setBindingExec( binding, FTL::StrRef(), exec );
 
       m_dfgWidget->getUIController()->checkErrors();
 
       m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
 
-      m_treeWidget->setHost(m_host);
-      m_treeWidget->setBinding(binding);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->clearCommands();
       m_dfgWidget->getUIController()->execute();
       m_dfgValueEditor->onArgsChanged();
 
-      QString tl_start = graph.getMetadata("timeline_start");
-      QString tl_end = graph.getMetadata("timeline_end");
-      QString tl_current = graph.getMetadata("timeline_current");
+      QString tl_start = exec.getMetadata("timeline_start");
+      QString tl_end = exec.getMetadata("timeline_end");
+      QString tl_current = exec.getMetadata("timeline_current");
       if(tl_start.length() > 0 && tl_end.length() > 0)
         m_timeLine->setTimeRange(tl_start.toInt(), tl_end.toInt());
       if(tl_current.length() > 0)
         m_timeLine->updateTime(tl_current.toInt());
 
-      QString camera_mat44 = graph.getMetadata("camera_mat44");
-      QString camera_focalDistance = graph.getMetadata("camera_focalDistance");
+      QString camera_mat44 = exec.getMetadata("camera_mat44");
+      QString camera_focalDistance = exec.getMetadata("camera_focalDistance");
       if(camera_mat44.length() > 0 && camera_focalDistance.length() > 0)
       {
         try
