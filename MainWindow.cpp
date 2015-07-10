@@ -117,8 +117,6 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
-  m_logWindowAction = windowMenu->addAction("LogWidget");
-  QObject::connect(m_logWindowAction, SIGNAL(triggered()), this, SLOT(onLogWindow()));
 
   m_slowOperationLabel = new QLabel();
 
@@ -204,7 +202,10 @@ MainWindow::MainWindow( QSettings *settings )
       config
       );
 
-    QDockWidget::DockWidgetFeatures dockFeatures = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
+    QDockWidget::DockWidgetFeatures dockFeatures =
+        QDockWidget::DockWidgetMovable
+      | QDockWidget::DockWidgetFloatable
+      | QDockWidget::DockWidgetClosable;
 
     QDockWidget *dfgDock = new QDockWidget("Canvas Graph", this);
     dfgDock->setObjectName( "Canvas Graph" );
@@ -213,33 +214,53 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::BottomDockWidgetArea, dfgDock, Qt::Vertical);
 
     // timeline
+    m_timeLine = new Viewports::TimeLineWidget();
+    m_timeLine->setTimeRange(1, 50);
     QDockWidget *timeLineDock = new QDockWidget("TimeLine", this);
     timeLineDock->setObjectName( "TimeLine" );
     timeLineDock->setFeatures( dockFeatures );
-    m_timeLine = new Viewports::TimeLineWidget(timeLineDock);
-    m_timeLine->setTimeRange(1, 50);
     timeLineDock->setWidget(m_timeLine);
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
 
     // preset library
+    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController() );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
-    m_treeWidget = new DFG::PresetTreeWidget( treeDock, m_dfgWidget->getDFGController() );
     treeDock->setWidget(m_treeWidget);
     addDockWidget(Qt::LeftDockWidgetArea, treeDock);
 
     QObject::connect(m_dfgWidget, SIGNAL(newPresetSaved(QString)), m_treeWidget, SLOT(refresh()));
 
     // value editor
-    QDockWidget *valueDock = new QDockWidget("Values", this);
-    valueDock->setObjectName( "Values" );
-    valueDock->setFeatures( dockFeatures );
-    m_dfgValueEditor = new DFG::DFGValueEditor(valueDock, m_dfgWidget->getUIController(), config);
-    valueDock->setWidget(m_dfgValueEditor);
-    addDockWidget(Qt::RightDockWidgetArea, valueDock);
+    m_dfgValueEditor =
+      new DFG::DFGValueEditor(
+        m_dfgWidget->getUIController(),
+        config
+        );
+    QObject::connect(
+      m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)),
+      this, SLOT(onValueChanged())
+      );
+    QDockWidget *dfgValueEditorDockWidget =
+      new QDockWidget(
+        "Value Editor",
+        this
+        );
+    dfgValueEditorDockWidget->setObjectName( "Values" );
+    dfgValueEditorDockWidget->setFeatures( dockFeatures );
+    dfgValueEditorDockWidget->setWidget( m_dfgValueEditor );
+    addDockWidget( Qt::RightDockWidgetArea, dfgValueEditorDockWidget );
 
-    QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
+    // log widget
+    QWidget *logWidget = new DFG::DFGLogWidget;
+    QDockWidget *logDockWidget = new QDockWidget( "Log Messages", this );
+    logDockWidget->setObjectName( "Log" );
+    logDockWidget->setFeatures( dockFeatures );
+    logDockWidget->setWidget( logWidget );
+    logDockWidget->hide();
+    addDockWidget( Qt::TopDockWidgetArea, logDockWidget, Qt::Vertical );
+
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
@@ -250,6 +271,13 @@ MainWindow::MainWindow( QSettings *settings )
 
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
     restoreState( settings->value("mainWindow/state").toByteArray() );
+
+    windowMenu->addAction( dfgDock->toggleViewAction() );
+    windowMenu->addAction( treeDock->toggleViewAction() );
+    windowMenu->addAction( dfgValueEditorDockWidget->toggleViewAction() );
+    windowMenu->addAction( timeLineDock->toggleViewAction() );
+    windowMenu->addSeparator();
+    windowMenu->addAction( logDockWidget->toggleViewAction() );
 
     onFrameChanged(m_timeLine->getTime());
     onGraphSet(m_dfgWidget->getUIGraph());
@@ -407,16 +435,6 @@ void MainWindow::onFrameChanged(int frame)
   }
 
   onValueChanged();
-}
-
-void MainWindow::onLogWindow()
-{
-  QDockWidget *logDock = new QDockWidget("Log", this);
-  logDock->setObjectName( "Log" );
-  DFG::DFGLogWidget * logWidget = new DFG::DFGLogWidget(logDock);
-  logDock->setWidget(logWidget);
-  addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
-  logDock->setFloating(true);
 }
 
 void MainWindow::onPortManipulationRequested(QString portName)

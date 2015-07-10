@@ -68,7 +68,6 @@ public slots:
   void onPaste();
   void onFrameChanged(int frame);
   void updateFPS();
-  void onLogWindow();
   void onPortManipulationRequested(QString portName);
 
 signals:
@@ -115,7 +114,6 @@ private:
   QAction *m_copyAction;
   QAction *m_pasteAction;
   QAction *m_manipAction;
-  QAction *m_logWindowAction;
 
   QString m_lastFileName;
 };
