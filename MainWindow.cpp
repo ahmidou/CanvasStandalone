@@ -116,6 +116,7 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
+  QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
 
   m_slowOperationLabel = new QLabel();
@@ -188,6 +189,14 @@ MainWindow::MainWindow( QSettings *settings )
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
+    QAction *setStageVisibleAction = new QAction( "&Stage", 0 );
+    setStageVisibleAction->setCheckable( true );
+    setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+    QObject::connect(
+      setStageVisibleAction, SIGNAL(toggled(bool)),
+      m_viewport, SLOT(setStageVisible(bool))
+      );
+    viewMenu->addAction( setStageVisibleAction );
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
