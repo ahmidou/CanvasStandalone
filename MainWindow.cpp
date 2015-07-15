@@ -185,7 +185,7 @@ MainWindow::MainWindow( QSettings *settings )
     glFormat.setSampleBuffers(true);
     glFormat.setSamples(4);
 
-    m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this);
+    m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this, m_settings);
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
