@@ -771,9 +771,20 @@ void MainWindow::saveGraph(bool saveAs)
   if(filePath.length() == 0 || saveAs)
   {
     QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
+    if(m_lastFileName.length() > 0)
+    {
+      filePath = m_lastFileName;
+      if(filePath.toLower().endsWith(".dfg.json"))
+        filePath = filePath.left(filePath.length() - 9);
+    }
+    else
+      filePath = lastPresetFolder;
+
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
     if(filePath.length() == 0)
       return;
+    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
+      filePath = filePath.left(filePath.length() - 9);
   }
 
   QDir dir(filePath);
