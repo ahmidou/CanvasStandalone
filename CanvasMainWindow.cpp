@@ -121,6 +121,7 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
   QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
+  QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
 
   m_slowOperationLabel = new QLabel();
@@ -189,10 +190,18 @@ MainWindow::MainWindow( QSettings *settings )
     glFormat.setSampleBuffers(true);
     glFormat.setSamples(4);
 
-    m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this);
+    m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this, m_settings);
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
+    QAction *setStageVisibleAction = new QAction( "&Stage", 0 );
+    setStageVisibleAction->setCheckable( true );
+    setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+    QObject::connect(
+      setStageVisibleAction, SIGNAL(toggled(bool)),
+      m_viewport, SLOT(setStageVisible(bool))
+      );
+    viewMenu->addAction( setStageVisibleAction );
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
@@ -200,7 +209,7 @@ MainWindow::MainWindow( QSettings *settings )
       m_client,
       m_host,
       binding,
-      "",
+      FTL::StrRef(),
       graph,
       m_manager,
       &m_dfguiCommandHandler,
@@ -208,7 +217,10 @@ MainWindow::MainWindow( QSettings *settings )
       config
       );
 
-    QDockWidget::DockWidgetFeatures dockFeatures = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
+    QDockWidget::DockWidgetFeatures dockFeatures =
+        QDockWidget::DockWidgetMovable
+      | QDockWidget::DockWidgetFloatable
+      | QDockWidget::DockWidgetClosable;
 
     QDockWidget *dfgDock = new QDockWidget("Canvas Graph", this);
     dfgDock->setObjectName( "Canvas Graph" );
@@ -217,60 +229,67 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::BottomDockWidgetArea, dfgDock, Qt::Vertical);
 
     // timeline
+    m_timeLine = new Viewports::TimeLineWidget();
+    m_timeLine->setTimeRange(1, 50);
     QDockWidget *timeLineDock = new QDockWidget("TimeLine", this);
     timeLineDock->setObjectName( "TimeLine" );
     timeLineDock->setFeatures( dockFeatures );
-    m_timeLine = new Viewports::TimeLineWidget(timeLineDock);
-    m_timeLine->setTimeRange(1, 50);
     timeLineDock->setWidget(m_timeLine);
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
 
     // preset library
+    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController() );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
-    m_treeWidget = new DFG::PresetTreeWidget(treeDock, m_host);
-    m_treeWidget->setBinding(binding);
     treeDock->setWidget(m_treeWidget);
     addDockWidget(Qt::LeftDockWidgetArea, treeDock);
 
     QObject::connect(m_dfgWidget, SIGNAL(newPresetSaved(QString)), m_treeWidget, SLOT(refresh()));
 
     // value editor
-    QDockWidget *valueDock = new QDockWidget("Values", this);
-    valueDock->setObjectName( "Values" );
-    valueDock->setFeatures( dockFeatures );
-    m_dfgValueEditor = new DFG::DFGValueEditor(valueDock, m_dfgWidget->getUIController(), config);
-    valueDock->setWidget(m_dfgValueEditor);
-    addDockWidget(Qt::RightDockWidgetArea, valueDock);
+    m_dfgValueEditor =
+      new DFG::DFGValueEditor(
+        m_dfgWidget->getUIController(),
+        config
+        );
+    QObject::connect(
+      m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)),
+      this, SLOT(onValueChanged())
+      );
+    QDockWidget *dfgValueEditorDockWidget =
+      new QDockWidget(
+        "Value Editor",
+        this
+        );
+    dfgValueEditorDockWidget->setObjectName( "Values" );
+    dfgValueEditorDockWidget->setFeatures( dockFeatures );
+    dfgValueEditorDockWidget->setWidget( m_dfgValueEditor );
+    addDockWidget( Qt::RightDockWidgetArea, dfgValueEditorDockWidget );
 
     // log widget
-    QDockWidget *logDock = new QDockWidget("Log", this);
-    logDock->setObjectName( "Log" );
-    logDock->setFeatures( dockFeatures );
-    DFG::DFGLogWidget *logWidget = new DFG::DFGLogWidget(logDock);
-    logDock->setWidget(logWidget);
-    addDockWidget(Qt::TopDockWidgetArea, logDock);
-    QAction *logWindowAction = windowMenu->addAction("LogWidget");
-    QObject::connect(
-      logWindowAction, SIGNAL(triggered()),
-      logWidget, SLOT(show())
-      );
+    QWidget *logWidget = new DFG::DFGLogWidget;
+    QDockWidget *logDockWidget = new QDockWidget( "Log Messages", this );
+    logDockWidget->setObjectName( "Log" );
+    logDockWidget->setFeatures( dockFeatures );
+    logDockWidget->setWidget( logWidget );
+    logDockWidget->hide();
+    addDockWidget( Qt::TopDockWidgetArea, logDockWidget, Qt::Vertical );
 
     // undo widget
-    QDockWidget *undoDock = new QDockWidget("History", this);
-    undoDock->setObjectName( "History" );
-    undoDock->setFeatures( dockFeatures );
     QUndoView *qUndoView = new QUndoView( &m_qUndoStack );
-    undoDock->setWidget(qUndoView);
-    addDockWidget(Qt::LeftDockWidgetArea, undoDock);
     QAction *undoWindowAction = windowMenu->addAction("UndoWidget");
     QObject::connect(
       undoWindowAction, SIGNAL(triggered()),
       qUndoView, SLOT(show())
       );
+    QDockWidget *undoDockWidget = new QDockWidget("History", this);
+    undoDockWidget->setObjectName( "History" );
+    undoDockWidget->setFeatures( dockFeatures );
+    undoDockWidget->setWidget(qUndoView);
+    undoDockWidget->hide();
+    addDockWidget(Qt::LeftDockWidgetArea, undoDockWidget);
 
-    QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
@@ -281,6 +300,14 @@ MainWindow::MainWindow( QSettings *settings )
 
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
     restoreState( settings->value("mainWindow/state").toByteArray() );
+
+    windowMenu->addAction( dfgDock->toggleViewAction() );
+    windowMenu->addAction( treeDock->toggleViewAction() );
+    windowMenu->addAction( dfgValueEditorDockWidget->toggleViewAction() );
+    windowMenu->addAction( timeLineDock->toggleViewAction() );
+    windowMenu->addSeparator();
+    windowMenu->addAction( undoDockWidget->toggleViewAction() );
+    windowMenu->addAction( logDockWidget->toggleViewAction() );
 
     onFrameChanged(m_timeLine->getTime());
     onGraphSet(m_dfgWidget->getUIGraph());
@@ -415,16 +442,6 @@ void MainWindow::onFrameChanged(int frame)
   }
 
   onValueChanged();
-}
-
-void MainWindow::onLogWindow()
-{
-  QDockWidget *logDock = new QDockWidget("Log", this);
-  logDock->setObjectName( "Log" );
-  DFG::DFGLogWidget * logWidget = new DFG::DFGLogWidget(logDock);
-  logDock->setWidget(logWidget);
-  addDockWidget(Qt::TopDockWidgetArea, logDock, Qt::Vertical);
-  logDock->setFloating(true);
 }
 
 void MainWindow::onPortManipulationRequested(QString portName)
@@ -591,13 +608,13 @@ void MainWindow::onNewGraph()
 
   try
   {
-    m_dfgWidget->getUIController()->getBinding().flush();
+    FabricUI::DFG::DFGController *dfgController =
+      m_dfgWidget->getUIController();
 
-    FabricCore::DFGBinding binding;
-    FabricCore::DFGExec exec;
+    FabricCore::DFGBinding binding = dfgController->getBinding();
+    binding.flush();
 
-    m_dfgWidget->getUIController()->clearCommands();
-    m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
+    dfgController->clearCommands();
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -610,11 +627,10 @@ void MainWindow::onNewGraph()
     m_hasTimeLinePort = false;
 
     binding = m_host.createBindingToNewGraph();
-    exec = binding.getExec();
+    FabricCore::DFGExec exec = binding.getExec();
 
-    m_dfgWidget->setGraph(m_host, binding, FTL::StrRef(), exec);
-    m_treeWidget->setHost(m_host);
-    m_treeWidget->setBinding(binding);
+    dfgController->setBindingExec( binding, FTL::StrRef(), exec );
+
     m_dfgValueEditor->onArgsChanged();
 
     emit contentChanged();
@@ -649,12 +665,12 @@ void MainWindow::loadGraph( QString const &filePath )
 
   try
   {
-    m_dfgWidget->getUIController()->getBinding().flush();
+    FabricUI::DFG::DFGController *dfgController =
+      m_dfgWidget->getUIController();
 
-    FabricCore::DFGBinding binding;
-    FabricCore::DFGExec exec;
-    
-    m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
+    FabricCore::DFGBinding binding = dfgController->getBinding();
+    binding.flush();
+
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
@@ -681,16 +697,15 @@ void MainWindow::loadGraph( QString const &filePath )
       std::string json = buffer;
       free(buffer);
   
-      binding = m_host.createBindingFromJSON( json.c_str() );
-      exec = binding.getExec();
-      m_dfgWidget->setGraph( m_host, binding, FTL::StrRef(), exec );
+      FabricCore::DFGBinding binding =
+        m_host.createBindingFromJSON( json.c_str() );
+      FabricCore::DFGExec exec = binding.getExec();
+      dfgController->setBindingExec( binding, FTL::StrRef(), exec );
 
       m_dfgWidget->getUIController()->checkErrors();
 
       m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
 
-      m_treeWidget->setHost(m_host);
-      m_treeWidget->setBinding(binding);
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->clearCommands();
       m_dfgWidget->getUIController()->execute();
@@ -754,9 +769,20 @@ void MainWindow::saveGraph(bool saveAs)
   if(filePath.length() == 0 || saveAs)
   {
     QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
+    if(m_lastFileName.length() > 0)
+    {
+      filePath = m_lastFileName;
+      if(filePath.toLower().endsWith(".dfg.json"))
+        filePath = filePath.left(filePath.length() - 9);
+    }
+    else
+      filePath = lastPresetFolder;
+
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
     if(filePath.length() == 0)
       return;
+    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
+      filePath = filePath.left(filePath.length() - 9);
   }
 
   QDir dir(filePath);

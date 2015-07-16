@@ -21,9 +21,7 @@ Import(
   'codeCompletionFlags',
   'extsFiles',
   'coreTestExts',
-  'coreDFGPresets',
-  'extsAdditionalDFGPresets',
-  'extsGeneratedDFGPresets',
+  'extraDFGPresets',
   'buildOS',
   'buildObject',
   'dfgSamples',
@@ -60,9 +58,7 @@ canvasStandalone += canvasStandaloneEnv.Install(sourceDir, canvasStandaloneEnv.F
 canvasStandaloneEnv.Depends(canvasStandalone, capiSharedFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, extsFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, coreTestExts)
-canvasStandaloneEnv.Depends(canvasStandalone, coreDFGPresets)
-canvasStandaloneEnv.Depends(canvasStandalone, extsAdditionalDFGPresets)
-canvasStandaloneEnv.Depends(canvasStandalone, extsGeneratedDFGPresets)
+canvasStandaloneEnv.Depends(canvasStandalone, extraDFGPresets)
 canvasStandaloneEnv.Depends(canvasStandalone, splitSearchFiles)
 canvasStandaloneEnv.Depends(canvasStandalone, dfgSamples)
 canvasStandaloneEnv.Depends(canvasStandalone, qtInstalledLibs)
