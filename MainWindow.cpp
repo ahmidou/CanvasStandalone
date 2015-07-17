@@ -243,7 +243,7 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
 
     // preset library
-    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController() );
+    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, true, true );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
