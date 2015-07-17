@@ -203,6 +203,17 @@ MainWindow::MainWindow( QSettings *settings )
       );
     viewMenu->addAction( setStageVisibleAction );
 
+    viewMenu->addSeparator();
+
+    QAction *blockCompilations = new QAction( "&Block compilations", 0 );
+    blockCompilations->setCheckable( true );
+    blockCompilations->setChecked( false );
+    QObject::connect(
+      blockCompilations, SIGNAL(toggled(bool)),
+      this, SLOT(setBlockCompilations(bool))
+      );
+    viewMenu->addAction( blockCompilations );
+
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
       NULL,
@@ -238,7 +249,7 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
 
     // preset library
-    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController() );
+    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, true, true );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
@@ -840,4 +851,11 @@ void MainWindow::saveGraph(bool saveAs)
 
   m_lastFileName = filePath;
   m_saveGraphAction->setEnabled(true);
+}
+
+void MainWindow::setBlockCompilations( bool blockCompilations )
+{
+  FabricUI::DFG::DFGController *dfgController =
+    m_dfgWidget->getDFGController();
+  dfgController->setBlockCompilations( blockCompilations );
 }
