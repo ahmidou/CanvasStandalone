@@ -376,7 +376,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
   else if(hotkey == "paste")
   {
-    m_dfgWidget->getUIController()->paste();
+    m_dfgWidget->getUIController()->cmdPaste();
   }
   else if(hotkey == "new scene")
   {
@@ -413,7 +413,7 @@ void MainWindow::onCopy()
 
 void MainWindow::onPaste()
 {
-  m_dfgWidget->getUIController()->paste();
+  m_dfgWidget->getUIController()->cmdPaste();
 }
 
 void MainWindow::onFrameChanged(int frame)
