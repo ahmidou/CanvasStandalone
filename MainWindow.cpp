@@ -270,7 +270,7 @@ MainWindow::MainWindow( QSettings *settings )
 
     // log widget
     QWidget *logWidget = new DFG::DFGLogWidget;
-    QAction *clearLogAction = new QAction( "&Clear log window", 0 );
+    QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
     QObject::connect(
       clearLogAction, SIGNAL(triggered()),
       logWidget, SLOT(clear())
