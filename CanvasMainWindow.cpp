@@ -201,18 +201,14 @@ MainWindow::MainWindow( QSettings *settings )
       setStageVisibleAction, SIGNAL(toggled(bool)),
       m_viewport, SLOT(setStageVisible(bool))
       );
-    viewMenu->addAction( setStageVisibleAction );
 
-    viewMenu->addSeparator();
-
-    QAction *blockCompilations = new QAction( "&Block compilations", 0 );
-    blockCompilations->setCheckable( true );
-    blockCompilations->setChecked( false );
+    QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
+    blockCompilationsAction->setCheckable( true );
+    blockCompilationsAction->setChecked( false );
     QObject::connect(
-      blockCompilations, SIGNAL(toggled(bool)),
+      blockCompilationsAction, SIGNAL(toggled(bool)),
       this, SLOT(setBlockCompilations(bool))
       );
-    viewMenu->addAction( blockCompilations );
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
@@ -280,6 +276,11 @@ MainWindow::MainWindow( QSettings *settings )
 
     // log widget
     QWidget *logWidget = new DFG::DFGLogWidget;
+    QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
+    QObject::connect(
+      clearLogAction, SIGNAL(triggered()),
+      logWidget, SLOT(clear())
+      );
     QDockWidget *logDockWidget = new QDockWidget( "Log Messages", this );
     logDockWidget->setObjectName( "Log" );
     logDockWidget->setFeatures( dockFeatures );
@@ -311,6 +312,12 @@ MainWindow::MainWindow( QSettings *settings )
 
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
     restoreState( settings->value("mainWindow/state").toByteArray() );
+
+    viewMenu->addAction( setStageVisibleAction );
+    viewMenu->addSeparator();
+    viewMenu->addAction( clearLogAction );
+    viewMenu->addSeparator();
+    viewMenu->addAction( blockCompilationsAction );
 
     windowMenu->addAction( dfgDock->toggleViewAction() );
     windowMenu->addAction( treeDock->toggleViewAction() );
