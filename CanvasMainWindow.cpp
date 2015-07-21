@@ -261,7 +261,11 @@ MainWindow::MainWindow( QSettings *settings )
         config
         );
     QObject::connect(
-      m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)),
+      m_dfgValueEditor, SIGNAL(valueItemDelta(ValueItem*)),
+      this, SLOT(onValueChanged())
+      );
+    QObject::connect(
+      m_dfgValueEditor, SIGNAL(valueItemInteractionDelta(ValueItem*)),
       this, SLOT(onValueChanged())
       );
     QDockWidget *dfgValueEditorDockWidget =
