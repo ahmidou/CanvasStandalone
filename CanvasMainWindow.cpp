@@ -223,6 +223,10 @@ MainWindow::MainWindow( QSettings *settings )
       &m_stack,
       config
       );
+    QObject::connect(
+      m_dfgWidget->getDFGController(), SIGNAL(argValueChanged()),
+      this, SLOT(onValueChanged())
+      );
 
     QDockWidget::DockWidgetFeatures dockFeatures =
         QDockWidget::DockWidgetMovable
@@ -260,14 +264,6 @@ MainWindow::MainWindow( QSettings *settings )
         m_dfgWidget->getUIController(),
         config
         );
-    QObject::connect(
-      m_dfgValueEditor, SIGNAL(valueItemDelta(ValueItem*)),
-      this, SLOT(onValueChanged())
-      );
-    QObject::connect(
-      m_dfgValueEditor, SIGNAL(valueItemInteractionDelta(ValueItem*)),
-      this, SLOT(onValueChanged())
-      );
     QDockWidget *dfgValueEditorDockWidget =
       new QDockWidget(
         "Value Editor",
@@ -446,16 +442,16 @@ void MainWindow::onFrameChanged(int frame)
     FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
     FabricCore::RTVal val = binding.getArgValue("timeline");
     if(!val.isValid())
-      binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
+      binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
     else
     {
       std::string typeName = val.getTypeName().getStringCString();
       if(typeName == "SInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame));
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
       else if(typeName == "UInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructUInt32(m_client, frame));
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructUInt32(m_client, frame), false);
       else if(typeName == "Float32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructFloat32(m_client, frame));
+        binding.setArgValue("timeline", FabricCore::RTVal::ConstructFloat32(m_client, frame), false);
     }
   }
   catch(FabricCore::Exception e)
