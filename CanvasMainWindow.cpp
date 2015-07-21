@@ -224,7 +224,7 @@ MainWindow::MainWindow( QSettings *settings )
       config
       );
     QObject::connect(
-      m_dfgWidget->getDFGController(), SIGNAL(argValueChanged()),
+      m_dfgWidget->getDFGController(), SIGNAL(dirty()),
       this, SLOT(onValueChanged())
       );
 
