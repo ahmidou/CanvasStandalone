@@ -490,8 +490,10 @@ void MainWindow::onPortManipulationRequested(QString portName)
       m_dfgWidget->getUIController()->logError(message.toUtf8().constData());
       return;
     }
-    controller->setArg(portName.toUtf8().constData(), value);
-    controller->execute();
+    controller->cmdSetArgValue(
+      portName.toUtf8().constData(),
+      value
+      );
   }
   catch(FabricCore::Exception e)
   {
