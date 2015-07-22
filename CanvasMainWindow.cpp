@@ -316,7 +316,7 @@ MainWindow::MainWindow( QSettings *settings )
     undoDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, undoDockWidget);
 
-    QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
+    QObject::connect(m_dfgWidget->getUIController(), SIGNAL(argsChanged()), this, SLOT(onStructureChanged()));
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
     QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
