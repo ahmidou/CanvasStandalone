@@ -220,7 +220,6 @@ MainWindow::MainWindow( QSettings *settings )
       graph,
       m_manager,
       &m_dfguiCommandHandler,
-      &m_stack,
       config
       );
     QObject::connect(
@@ -634,13 +633,12 @@ void MainWindow::onNewGraph()
     FabricCore::DFGBinding binding = dfgController->getBinding();
     binding.flush();
 
-    dfgController->clearCommands();
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
 
     m_viewport->clearInlineDrawing();
-    m_stack.clear();
+    m_qUndoStack.clear();
 
     QCoreApplication::processEvents();
 
@@ -696,7 +694,7 @@ void MainWindow::loadGraph( QString const &filePath )
     m_host.flushUndoRedo();
 
     m_viewport->clearInlineDrawing();
-    m_stack.clear();
+    m_qUndoStack.clear();
 
     QCoreApplication::processEvents();
 
@@ -727,7 +725,6 @@ void MainWindow::loadGraph( QString const &filePath )
       m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
 
       m_dfgWidget->getUIController()->bindUnboundRTVals();
-      m_dfgWidget->getUIController()->clearCommands();
       m_dfgWidget->getUIController()->execute();
       m_dfgValueEditor->onArgsChanged();
 

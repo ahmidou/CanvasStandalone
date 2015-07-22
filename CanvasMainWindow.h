@@ -14,7 +14,6 @@
 #include <FabricUI/DFG/DFGUI.h>
 #include <FabricUI/DFG/DFGValueEditor.h>
 #include <FabricUI/DFG/DFGUICmdHandler_QUndo.h>
-#include <Commands/CommandStack.h>
 
 #include <ASTWrapper/KLASTManager.h>
 
@@ -95,7 +94,6 @@ private:
   FabricCore::DFGHost m_host;
   FabricCore::RTVal m_evalContext;
   DFG::PresetTreeWidget * m_treeWidget;
-  Commands::CommandStack m_stack;
   DFG::DFGWidget * m_dfgWidget;
   DFG::DFGValueEditor * m_dfgValueEditor;
   FabricUI::GraphView::Graph * m_setGraph;
