@@ -57,6 +57,7 @@ public:
 
 public slots:
 
+  void onDirty();
   void onValueChanged();
   void onStructureChanged();
   void onGraphSet(FabricUI::GraphView::Graph * graph);

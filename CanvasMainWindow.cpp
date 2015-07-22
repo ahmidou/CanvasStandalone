@@ -237,10 +237,6 @@ MainWindow::MainWindow( QSettings *settings )
       &m_dfguiCommandHandler,
       config
       );
-    QObject::connect(
-      m_dfgWidget->getDFGController(), SIGNAL(dirty()),
-      this, SLOT(onValueChanged())
-      );
 
     QDockWidget::DockWidgetFeatures dockFeatures =
         QDockWidget::DockWidgetMovable
@@ -316,7 +312,23 @@ MainWindow::MainWindow( QSettings *settings )
     undoDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, undoDockWidget);
 
-    QObject::connect(m_dfgWidget->getUIController(), SIGNAL(argsChanged()), this, SLOT(onStructureChanged()));
+    QObject::connect(
+      m_dfgWidget->getUIController(), SIGNAL(argsChanged()),
+      this, SLOT(onStructureChanged())
+      );
+    QObject::connect(
+      m_dfgWidget->getUIController(), SIGNAL(argValuesChanged()),
+      this, SLOT(onValueChanged())
+      );
+    QObject::connect(
+      m_dfgWidget->getUIController(), SIGNAL(defaultValuesChanged()),
+      this, SLOT(onValueChanged())
+      );
+    QObject::connect(
+      m_dfgWidget->getDFGController(), SIGNAL(dirty()),
+      this, SLOT(onDirty())
+      );
+
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
     QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
@@ -375,7 +387,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
   else if(hotkey == "execute")
   {
-    onValueChanged();
+    onDirty();
   }
   else if(hotkey == "frameSelected")
   {
@@ -477,8 +489,6 @@ void MainWindow::onFrameChanged(int frame)
   {
     m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
   }
-
-  onValueChanged();
 }
 
 void MainWindow::onPortManipulationRequested(QString portName)
@@ -520,28 +530,31 @@ void MainWindow::onPortManipulationRequested(QString portName)
   }
 }
 
+void MainWindow::onDirty()
+{
+  m_dfgWidget->getUIController()->execute();
+  onValueChanged();
+}
+
 void MainWindow::onValueChanged()
 {
-  if(m_dfgWidget->getUIController()->execute())
+  try
   {
-    try
-    {
-      // FabricCore::DFGExec graph = m_dfgWidget->getUIController()->getGraph();
-      // DFGWrapper::ExecPortList ports = graph->getPorts();
-      // for(size_t i=0;i<ports.size();i++)
-      // {
-      //   if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
-      //     continue;
-      //   FabricCore::RTVal argVal = graph.getWrappedCoreBinding().getArgValue(ports[i]->getName());
-      //   m_dfgWidget->getUIController()->log(argVal.getJSON().getStringCString());
-      // }
-      m_dfgValueEditor->updateOutputs();
-      emit contentChanged();
-    }
-    catch(FabricCore::Exception e)
-    {
-      m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
-    }
+    // FabricCore::DFGExec graph = m_dfgWidget->getUIController()->getGraph();
+    // DFGWrapper::ExecPortList ports = graph->getPorts();
+    // for(size_t i=0;i<ports.size();i++)
+    // {
+    //   if(ports[i]->getPortType() == FabricCore::DFGPortType_Out)
+    //     continue;
+    //   FabricCore::RTVal argVal = graph.getWrappedCoreBinding().getArgValue(ports[i]->getName());
+    //   m_dfgWidget->getUIController()->log(argVal.getJSON().getStringCString());
+    // }
+    m_dfgValueEditor->updateOutputs();
+    emit contentChanged();
+  }
+  catch(FabricCore::Exception e)
+  {
+    m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
   }
 }
 
@@ -574,7 +587,6 @@ void MainWindow::onStructureChanged()
       m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
     }
   }
-  onValueChanged();
 }
 
 void MainWindow::updateFPS()
