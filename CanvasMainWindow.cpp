@@ -121,13 +121,20 @@ MainWindow::MainWindow( QSettings *settings )
 
   editMenu->addSeparator();
 
-  m_cutAction = editMenu->addAction("Cut (Ctrl-X)");
-  m_copyAction = editMenu->addAction("Copy (Ctrl-C)");
-  m_pasteAction = editMenu->addAction("Paste (Ctrl-V)");
+  m_cutAction = editMenu->addAction("Cut");
+  m_cutAction->setShortcut( QKeySequence::Cut );
+  QObject::connect(m_cutAction, SIGNAL(triggered()), this, SLOT(onCut()));
+  m_copyAction = editMenu->addAction("Copy");
+  m_copyAction->setShortcut( QKeySequence::Copy );
+  QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
+  m_pasteAction = editMenu->addAction("Paste");
+  m_pasteAction->setShortcut( QKeySequence::Paste );
+  QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
+
+  editMenu->addSeparator();
+
   m_manipAction = editMenu->addAction("Toggle Manipulation (Q)");
 
-  QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
-  QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
 
   QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
@@ -423,6 +430,11 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
 void MainWindow::onCopy()
 {
   m_dfgWidget->getUIController()->copy();
+}  
+
+void MainWindow::onCut()
+{
+  m_dfgWidget->getUIController()->cmdCut();
 }  
 
 void MainWindow::onPaste()

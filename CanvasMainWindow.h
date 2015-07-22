@@ -67,6 +67,7 @@ public slots:
   void onLoadGraph();
   void onSaveGraph();
   void onSaveGraphAs();
+  void onCut();
   void onCopy();
   void onPaste();
   void onFrameChanged(int frame);
