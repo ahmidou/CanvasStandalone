@@ -110,9 +110,17 @@ MainWindow::MainWindow( QSettings *settings )
   QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
   QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-  editMenu->addAction( m_qUndoStack.createUndoAction( editMenu ) );
-  editMenu->addAction( m_qUndoStack.createRedoAction( editMenu ) );
+
+  QAction *undoAction = m_qUndoStack.createUndoAction( editMenu );
+  undoAction->setShortcut( QKeySequence::Undo );
+  editMenu->addAction( undoAction );
+
+  QAction *redoAction = m_qUndoStack.createRedoAction( editMenu );
+  redoAction->setShortcut( QKeySequence::Redo );
+  editMenu->addAction( redoAction );
+
   editMenu->addSeparator();
+
   m_cutAction = editMenu->addAction("Cut (Ctrl-X)");
   m_copyAction = editMenu->addAction("Copy (Ctrl-C)");
   m_pasteAction = editMenu->addAction("Paste (Ctrl-V)");
