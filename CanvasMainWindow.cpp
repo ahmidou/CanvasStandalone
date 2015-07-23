@@ -533,7 +533,7 @@ void MainWindow::onPortManipulationRequested(QString portName)
 void MainWindow::onDirty()
 {
   m_dfgWidget->getUIController()->execute();
-  
+
   onValueChanged();
 
   emit contentChanged();
@@ -642,8 +642,6 @@ void MainWindow::onNodeDoubleClicked(
   if ( node->isBackDropNode() )
     return;
 
-  FabricCore::DFGExec coreDFGGraph =
-    m_dfgWidget->getUIController()->getExec();
   m_dfgValueEditor->setNodeName( node->name() );
 }
 
