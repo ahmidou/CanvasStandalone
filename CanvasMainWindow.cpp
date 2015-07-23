@@ -329,6 +329,15 @@ MainWindow::MainWindow( QSettings *settings )
       this, SLOT(onDirty())
       );
 
+    QObject::connect(
+      m_dfgWidget->getDFGController(), SIGNAL(bindingChanged(FabricCore::DFGBinding const &)),
+      m_dfgValueEditor, SLOT(setBinding(FabricCore::DFGBinding const &))
+      );
+    QObject::connect(
+      m_dfgWidget->getDFGController(), SIGNAL(nodeRemoved(FTL::CStrRef)),
+      m_dfgValueEditor, SLOT(onNodeRemoved(FTL::CStrRef))
+      );
+
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_dfgWidget->getUIController(), SIGNAL(variablesChanged()), m_treeWidget, SLOT(refresh()));
     QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
@@ -642,14 +651,26 @@ void MainWindow::onNodeDoubleClicked(
   if ( node->isBackDropNode() )
     return;
 
-  m_dfgValueEditor->setNodeName( node->name() );
+  FabricUI::DFG::DFGController *dfgController =
+    m_dfgWidget->getUIController();
+
+  m_dfgValueEditor->setNode(
+    dfgController->getBinding(),
+    dfgController->getExecPath(),
+    dfgController->getExec(),
+    node->name()
+    );
 }
 
 void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel)
 {
-  DFG::DFGController * ctrl = m_dfgWidget->getUIController();
-  if(ctrl->isViewingRootGraph())
-    m_dfgValueEditor->setNodeName( 0 );
+  FabricUI::DFG::DFGController *dfgController =
+    m_dfgWidget->getUIController();
+
+  if ( dfgController->isViewingRootGraph() )
+    m_dfgValueEditor->setBinding( dfgController->getBinding() );
+  else
+    m_dfgValueEditor->clear();
 }
 
 void MainWindow::onNewGraph()
