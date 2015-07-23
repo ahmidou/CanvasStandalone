@@ -533,7 +533,10 @@ void MainWindow::onPortManipulationRequested(QString portName)
 void MainWindow::onDirty()
 {
   m_dfgWidget->getUIController()->execute();
+  
   onValueChanged();
+
+  emit contentChanged();
 }
 
 void MainWindow::onValueChanged()
@@ -550,7 +553,6 @@ void MainWindow::onValueChanged()
     //   m_dfgWidget->getUIController()->log(argVal.getJSON().getStringCString());
     // }
     m_dfgValueEditor->updateOutputs();
-    emit contentChanged();
   }
   catch(FabricCore::Exception e)
   {
@@ -668,9 +670,9 @@ void MainWindow::onNewGraph()
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
+    m_qUndoStack.clear();
 
     m_viewport->clearInlineDrawing();
-    m_qUndoStack.clear();
 
     QCoreApplication::processEvents();
 
@@ -724,9 +726,9 @@ void MainWindow::loadGraph( QString const &filePath )
     m_dfgValueEditor->clear();
 
     m_host.flushUndoRedo();
+    m_qUndoStack.clear();
 
     m_viewport->clearInlineDrawing();
-    m_qUndoStack.clear();
 
     QCoreApplication::processEvents();
 
