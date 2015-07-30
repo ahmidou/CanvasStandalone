@@ -209,12 +209,20 @@ MainWindow::MainWindow( QSettings *settings )
     setCentralWidget(m_viewport);
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
-    QAction *setStageVisibleAction = new QAction( "&Stage", 0 );
+    QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
     setStageVisibleAction->setCheckable( true );
     setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
     QObject::connect(
       setStageVisibleAction, SIGNAL(toggled(bool)),
       m_viewport, SLOT(setStageVisible(bool))
+      );
+
+    QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
+    setUsingStageAction->setCheckable( true );
+    setUsingStageAction->setChecked( m_viewport->isUsingStage() );
+    QObject::connect(
+      setUsingStageAction, SIGNAL(toggled(bool)),
+      m_viewport, SLOT(setUsingStage(bool))
       );
 
     QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
@@ -349,6 +357,7 @@ MainWindow::MainWindow( QSettings *settings )
     restoreState( settings->value("mainWindow/state").toByteArray() );
 
     viewMenu->addAction( setStageVisibleAction );
+    viewMenu->addAction( setUsingStageAction );
     viewMenu->addSeparator();
     viewMenu->addAction( clearLogAction );
     viewMenu->addSeparator();
