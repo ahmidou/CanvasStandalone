@@ -24,6 +24,7 @@ using namespace FabricServices;
 using namespace FabricUI;
 
 class MainWindow;
+class QUndoView;
 
 class MainWindowEventFilter : public QObject
 {
@@ -100,6 +101,7 @@ private:
   DFG::DFGValueEditor * m_dfgValueEditor;
   FabricUI::GraphView::Graph * m_setGraph;
   Viewports::GLViewportWidget * m_viewport;
+  QUndoView *m_qUndoView;
   Viewports::TimeLineWidget * m_timeLine;
   bool m_hasTimeLinePort;
   QStatusBar *m_statusBar;

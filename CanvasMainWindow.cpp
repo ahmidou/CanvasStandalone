@@ -307,16 +307,17 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget( Qt::TopDockWidgetArea, logDockWidget, Qt::Vertical );
 
     // undo widget
-    QUndoView *qUndoView = new QUndoView( &m_qUndoStack );
+    m_qUndoView = new QUndoView( &m_qUndoStack );
+    m_qUndoView->setEmptyLabel( "New Graph" );
     QAction *undoWindowAction = windowMenu->addAction("UndoWidget");
     QObject::connect(
       undoWindowAction, SIGNAL(triggered()),
-      qUndoView, SLOT(show())
+      m_qUndoView, SLOT(show())
       );
     QDockWidget *undoDockWidget = new QDockWidget("History", this);
     undoDockWidget->setObjectName( "History" );
     undoDockWidget->setFeatures( dockFeatures );
-    undoDockWidget->setWidget(qUndoView);
+    undoDockWidget->setWidget(m_qUndoView);
     undoDockWidget->hide();
     addDockWidget(Qt::LeftDockWidgetArea, undoDockWidget);
 
@@ -703,6 +704,7 @@ void MainWindow::onNewGraph()
 
     m_host.flushUndoRedo();
     m_qUndoStack.clear();
+    m_qUndoView->setEmptyLabel( "New Graph" );
 
     m_viewport->clearInlineDrawing();
 
@@ -759,6 +761,7 @@ void MainWindow::loadGraph( QString const &filePath )
 
     m_host.flushUndoRedo();
     m_qUndoStack.clear();
+    m_qUndoView->setEmptyLabel( "Load Graph" );
 
     m_viewport->clearInlineDrawing();
 
