@@ -321,6 +321,10 @@ MainWindow::MainWindow( QSettings *settings )
     addDockWidget(Qt::LeftDockWidgetArea, undoDockWidget);
 
     QObject::connect(
+      m_dfgWidget->getUIController(), SIGNAL(varsChanged()),
+      m_treeWidget, SLOT(refresh())
+      );
+    QObject::connect(
       m_dfgWidget->getUIController(), SIGNAL(argsChanged()),
       this, SLOT(onStructureChanged())
       );
