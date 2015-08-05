@@ -5,6 +5,7 @@
 #include "CanvasMainWindow.h"
 #include <FabricCore.h>
 #include <FabricUI/Style/FabricStyle.h>
+#include <FTL/CStrRef.h>
 
 int main(int argc, char *argv[])
 {
@@ -17,10 +18,22 @@ int main(int argc, char *argv[])
   QSettings settings;
   try
   {
-    MainWindow mainWin( &settings );
+    int argi = 1;
+
+    bool unguarded = false;
+    if ( argi < argc && FTL::CStrRef(argv[argi]) == FTL_STR("-u") )
+    {
+      printf("Running core in UNGUARDED mode\n");
+      unguarded = true;
+      ++argi;
+    }
+
+    MainWindow mainWin( &settings, unguarded );
     mainWin.show();
-    for ( int i = 1; i < argc; ++i )
-      mainWin.loadGraph( argv[i] );
+
+    for ( ; argi < argc; ++argi )
+      mainWin.loadGraph( argv[argi] );
+
     return app.exec();
   }
   catch ( FabricCore::Exception e )

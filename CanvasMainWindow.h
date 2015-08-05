@@ -47,7 +47,10 @@ class MainWindow : public DFG::DFGMainWindow
   
 public:
 
-  MainWindow( QSettings *settings );
+  MainWindow(
+    QSettings *settings,
+    bool unguarded
+    );
   ~MainWindow();
 
   void loadGraph( QString const &filePath );

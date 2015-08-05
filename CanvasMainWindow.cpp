@@ -72,7 +72,10 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
   return QObject::eventFilter(object, event);
 };
 
-MainWindow::MainWindow( QSettings *settings )
+MainWindow::MainWindow(
+  QSettings *settings,
+  bool unguarded
+  )
   : m_dfguiCommandHandler( &m_qUndoStack )
   , m_settings( settings )
 {
@@ -167,7 +170,7 @@ MainWindow::MainWindow( QSettings *settings )
   {
     FabricCore::Client::CreateOptions options;
     memset( &options, 0, sizeof( options ) );
-    options.guarded = 1;
+    options.guarded = !unguarded;
     options.optimizationType = FabricCore::ClientOptimizationType_Background;
     options.licenseType = FabricCore::ClientLicenseType_Interactive;
     options.rtValToJSONEncoder = &sRTValEncoder;
