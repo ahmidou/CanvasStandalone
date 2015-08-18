@@ -309,14 +309,9 @@ MainWindow::MainWindow(
     logDockWidget->hide();
     addDockWidget( Qt::TopDockWidgetArea, logDockWidget, Qt::Vertical );
 
-    // undo widget
+    // History widget
     m_qUndoView = new QUndoView( &m_qUndoStack );
     m_qUndoView->setEmptyLabel( "New Graph" );
-    QAction *undoWindowAction = windowMenu->addAction("UndoWidget");
-    QObject::connect(
-      undoWindowAction, SIGNAL(triggered()),
-      m_qUndoView, SLOT(show())
-      );
     QDockWidget *undoDockWidget = new QDockWidget("History", this);
     undoDockWidget->setObjectName( "History" );
     undoDockWidget->setFeatures( dockFeatures );
