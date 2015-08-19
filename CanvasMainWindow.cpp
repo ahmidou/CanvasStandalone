@@ -98,13 +98,18 @@ MainWindow::MainWindow(
 
   // top menu
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  m_newGraphAction = fileMenu->addAction("New Graph (Ctrl-N)");
-  m_loadGraphAction = fileMenu->addAction("Load Graph ... (Ctrl-O)");
-  m_saveGraphAction = fileMenu->addAction("Save Graph (Ctrl-S)");
+  m_newGraphAction = fileMenu->addAction("New Graph");
+  m_newGraphAction->setShortcut(QKeySequence::New);
+  m_loadGraphAction = fileMenu->addAction("Load Graph...");
+  m_loadGraphAction->setShortcut(QKeySequence::Open);
+  m_saveGraphAction = fileMenu->addAction("Save Graph");
+  m_saveGraphAction->setShortcut(QKeySequence::Save);
   m_saveGraphAction->setEnabled(false);
   m_saveGraphAsAction = fileMenu->addAction("Save Graph As...");
+  m_saveGraphAsAction->setShortcut(QKeySequence::SaveAs);
   fileMenu->addSeparator();
   m_quitAction = fileMenu->addAction("Quit");
+  m_quitAction->setShortcut(QKeySequence::Quit);
 
   QObject::connect(m_newGraphAction, SIGNAL(triggered()), this, SLOT(onNewGraph()));
   QObject::connect(m_loadGraphAction, SIGNAL(triggered()), this, SLOT(onLoadGraph()));
@@ -137,7 +142,7 @@ MainWindow::MainWindow(
   editMenu->addSeparator();
 
   m_manipAction = editMenu->addAction("Toggle Manipulation (Q)");
-
+  m_manipAction->setShortcut(Qt::Key_Q);
 
   QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
   QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
@@ -213,6 +218,7 @@ MainWindow::MainWindow(
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
     QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
+    setStageVisibleAction->setShortcut(Qt::Key_G);
     setStageVisibleAction->setCheckable( true );
     setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
     QObject::connect(
@@ -221,6 +227,7 @@ MainWindow::MainWindow(
       );
 
     QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
+    setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
     setUsingStageAction->setCheckable( true );
     setUsingStageAction->setChecked( m_viewport->isUsingStage() );
     QObject::connect(
@@ -365,13 +372,26 @@ MainWindow::MainWindow(
     viewMenu->addSeparator();
     viewMenu->addAction( blockCompilationsAction );
 
-    windowMenu->addAction( dfgDock->toggleViewAction() );
-    windowMenu->addAction( treeDock->toggleViewAction() );
-    windowMenu->addAction( dfgValueEditorDockWidget->toggleViewAction() );
-    windowMenu->addAction( timeLineDock->toggleViewAction() );
+    QAction * toggleAction = NULL;
+    toggleAction = dfgDock->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_4 );
+    windowMenu->addAction( toggleAction );
+    toggleAction = treeDock->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_5 );
+    windowMenu->addAction( toggleAction );
+    toggleAction = dfgValueEditorDockWidget->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_6 );
+    windowMenu->addAction( toggleAction );
+    toggleAction = timeLineDock->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_0 );
+    windowMenu->addAction( toggleAction );
     windowMenu->addSeparator();
-    windowMenu->addAction( undoDockWidget->toggleViewAction() );
-    windowMenu->addAction( logDockWidget->toggleViewAction() );
+    toggleAction = undoDockWidget->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_7 );
+    windowMenu->addAction( toggleAction );
+    toggleAction = logDockWidget->toggleViewAction();
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_8 );
+    windowMenu->addAction( toggleAction );
 
     onFrameChanged(m_timeLine->getTime());
     onGraphSet(m_dfgWidget->getUIGraph());
