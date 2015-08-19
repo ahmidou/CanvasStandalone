@@ -79,6 +79,7 @@ public slots:
   void updateFPS();
   void onPortManipulationRequested(QString portName);
   void setBlockCompilations( bool blockCompilations );
+  void onFileNameChanged(QString fileName);
 
 signals:
   void contentChanged();
@@ -126,5 +127,6 @@ private:
   QAction *m_pasteAction;
   QAction *m_manipAction;
 
+  QString m_windowTitle;
   QString m_lastFileName;
 };

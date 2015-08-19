@@ -79,7 +79,8 @@ MainWindow::MainWindow(
   : m_dfguiCommandHandler( &m_qUndoStack )
   , m_settings( settings )
 {
-  setWindowTitle("Fabric Engine");
+  m_windowTitle = "Fabric Engine";
+  onFileNameChanged("");
 
   DFG::DFGWidget::setSettings(m_settings);
 
@@ -739,6 +740,8 @@ void MainWindow::onNewGraph()
     emit contentChanged();
     onStructureChanged();
 
+    onFileNameChanged( "" );
+
     m_viewport->update();
   }
   catch(FabricCore::Exception e)
@@ -844,6 +847,8 @@ void MainWindow::loadGraph( QString const &filePath )
       emit contentChanged();
       onStructureChanged();
 
+      onFileNameChanged( filePath );
+
       m_viewport->update();
     }
   }
@@ -942,6 +947,9 @@ void MainWindow::saveGraph(bool saveAs)
   }
 
   m_lastFileName = filePath;
+  
+  onFileNameChanged( filePath );
+
   m_saveGraphAction->setEnabled(true);
 }
 
@@ -950,4 +958,12 @@ void MainWindow::setBlockCompilations( bool blockCompilations )
   FabricUI::DFG::DFGController *dfgController =
     m_dfgWidget->getDFGController();
   dfgController->setBlockCompilations( blockCompilations );
+}
+
+void MainWindow::onFileNameChanged(QString fileName)
+{
+  if(fileName.isEmpty())
+    setWindowTitle( m_windowTitle );
+  else
+    setWindowTitle( m_windowTitle + " - " + fileName );
 }
