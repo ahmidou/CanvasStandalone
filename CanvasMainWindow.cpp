@@ -219,7 +219,7 @@ MainWindow::MainWindow(
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
     QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-    setStageVisibleAction->setShortcut(Qt::Key_G);
+    setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
     setStageVisibleAction->setCheckable( true );
     setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
     QObject::connect(
