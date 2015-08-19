@@ -707,6 +707,7 @@ void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel
 
 void MainWindow::onNewGraph()
 {
+  m_timeLine->pause();
   m_lastFileName = "";
   m_saveGraphAction->setEnabled(false);
 
@@ -767,6 +768,7 @@ void MainWindow::onLoadGraph()
 
 void MainWindow::loadGraph( QString const &filePath )
 {
+  m_timeLine->pause();
   m_hasTimeLinePort = false;
 
   try
@@ -873,6 +875,8 @@ void MainWindow::onSaveGraphAs()
 
 void MainWindow::saveGraph(bool saveAs)
 {
+  m_timeLine->pause();
+
   QString filePath = m_lastFileName;
   if(filePath.length() == 0 || saveAs)
   {
