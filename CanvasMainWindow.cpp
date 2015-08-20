@@ -8,6 +8,7 @@
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
+#include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -468,7 +469,11 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
     if(nodes.size() > 0)
-      m_dfgWidget->onEditNodeTitle(nodes[0]);
+    {
+      DFG::DFGNodePropertiesDialog dialog( this, m_dfgWidget->getUIController(), nodes[0]->name().c_str(), m_dfgWidget->getConfig() );
+      if(!dialog.exec())
+        return;
+    }
   }
   else if(hotkey == "relax nodes")
   {
