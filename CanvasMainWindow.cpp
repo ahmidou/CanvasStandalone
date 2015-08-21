@@ -53,7 +53,7 @@ MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
 
 bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
 {
-  if (event->type() == QEvent::KeyPress) 
+  if (event->type() == QEvent::KeyPress)
   {
     QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
 
@@ -67,7 +67,7 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
       m_window->m_dfgWidget->onKeyPressed(keyEvent);
       if(keyEvent->isAccepted())
         return true;
-    }  
+    }
   }
 
   return QObject::eventFilter(object, event);
@@ -143,7 +143,7 @@ MainWindow::MainWindow(
 
   editMenu->addSeparator();
 
-  m_manipAction = editMenu->addAction("Toggle Manipulation (Q)");
+  m_manipAction = editMenu->addAction("Toggle Manipulation");
   m_manipAction->setShortcut(Qt::Key_Q);
 
   QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
@@ -361,7 +361,7 @@ MainWindow::MainWindow(
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
 
-    QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)), 
+    QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)),
       this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
 
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
@@ -488,12 +488,12 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
 void MainWindow::onCopy()
 {
   m_dfgWidget->getUIController()->copy();
-}  
+}
 
 void MainWindow::onCut()
 {
   m_dfgWidget->getUIController()->cmdCut();
-}  
+}
 
 void MainWindow::onPaste()
 {
@@ -670,11 +670,11 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
     graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
 
-    QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
+    QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
-    QObject::connect(graph, SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)), 
+    QObject::connect(graph, SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)),
       this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
-    QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)), 
+    QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)),
       this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
 
     m_setGraph = graph;
@@ -754,7 +754,7 @@ void MainWindow::onNewGraph()
   {
     printf("Exception: %s\n", e.getDesc_cstr());
   }
-  
+
 }
 
 void MainWindow::onLoadGraph()
@@ -810,7 +810,7 @@ void MainWindow::loadGraph( QString const &filePath )
 
       std::string json = buffer;
       free(buffer);
-  
+
       FabricCore::DFGBinding binding =
         m_host.createBindingFromJSON( json.c_str() );
       FabricCore::DFGExec exec = binding.getExec();
@@ -848,7 +848,7 @@ void MainWindow::loadGraph( QString const &filePath )
         {
           printf("Exception: %s\n", e.getDesc_cstr());
         }
-        
+
       }
 
       emit contentChanged();
@@ -956,7 +956,7 @@ void MainWindow::saveGraph(bool saveAs)
   }
 
   m_lastFileName = filePath;
-  
+
   onFileNameChanged( filePath );
 
   m_saveGraphAction->setEnabled(true);
