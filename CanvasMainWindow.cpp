@@ -271,7 +271,8 @@ MainWindow::MainWindow(
 
     // timeline
     m_timeLine = new Viewports::TimeLineWidget();
-    m_timeLine->setTimeRange(1, 50);
+    m_timeLine->setTimeRange(TimeRange_Default_Frame_In, TimeRange_Default_Frame_Out);
+    m_timeLine->updateTime(TimeRange_Default_Frame_In);
     QDockWidget *timeLineDock = new QDockWidget("TimeLine", this);
     timeLineDock->setObjectName( "TimeLine" );
     timeLineDock->setFeatures( dockFeatures );
@@ -731,6 +732,9 @@ void MainWindow::onNewGraph()
     m_qUndoView->setEmptyLabel( "New Graph" );
 
     m_viewport->clearInlineDrawing();
+
+    m_timeLine->setTimeRange(TimeRange_Default_Frame_In, TimeRange_Default_Frame_Out);
+    m_timeLine->updateTime(TimeRange_Default_Frame_In);
 
     QCoreApplication::processEvents();
 

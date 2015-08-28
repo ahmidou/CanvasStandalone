@@ -20,6 +20,9 @@
 #include <FabricUI/Viewports/TimeLineWidget.h>
 #include <FabricUI/Viewports/GLViewportWidget.h>
 
+#define TimeRange_Default_Frame_In      1
+#define TimeRange_Default_Frame_Out     50
+
 using namespace FabricServices;
 using namespace FabricUI;
 
