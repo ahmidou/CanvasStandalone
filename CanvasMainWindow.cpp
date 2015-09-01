@@ -759,7 +759,9 @@ void MainWindow::onNewGraph()
     m_viewport->clearInlineDrawing();
 
     m_timeLine->setTimeRange(TimeRange_Default_Frame_In, TimeRange_Default_Frame_Out);
-    m_timeLine->updateTime(TimeRange_Default_Frame_In);
+    m_timeLine->setLoopMode(1);
+    m_timeLine->setSimulationMode(0);
+    m_timeLine->updateTime(TimeRange_Default_Frame_In, true);
 
     QCoreApplication::processEvents();
 
@@ -857,11 +859,24 @@ void MainWindow::loadGraph( QString const &filePath )
 
       QString tl_start = exec.getMetadata("timeline_start");
       QString tl_end = exec.getMetadata("timeline_end");
+      QString tl_loopMode = exec.getMetadata("timeline_loopMode");
+      QString tl_simulationMode = exec.getMetadata("timeline_simMode");
       QString tl_current = exec.getMetadata("timeline_current");
+
       if(tl_start.length() > 0 && tl_end.length() > 0)
         m_timeLine->setTimeRange(tl_start.toInt(), tl_end.toInt());
-      if(tl_current.length() > 0)
-        m_timeLine->updateTime(tl_current.toInt());
+      else
+        m_timeLine->setTimeRange(TimeRange_Default_Frame_In, TimeRange_Default_Frame_Out);
+
+      if(tl_loopMode.length() > 0)
+        m_timeLine->setLoopMode(tl_loopMode.toInt());
+      else
+        m_timeLine->setLoopMode(1);
+
+      if(tl_simulationMode.length() > 0)
+        m_timeLine->setSimulationMode(tl_simulationMode.toInt());
+      else
+        m_timeLine->setSimulationMode(0);
 
       QString camera_mat44 = exec.getMetadata("camera_mat44");
       QString camera_focalDistance = exec.getMetadata("camera_focalDistance");
@@ -886,6 +901,13 @@ void MainWindow::loadGraph( QString const &filePath )
       onStructureChanged();
 
       onFileNameChanged( filePath );
+
+      // then set it to the current value if we still have it.
+      // this will ensure that sim mode scenes will play correctly.
+      if(tl_current.length() > 0)
+        m_timeLine->updateTime(tl_current.toInt(), true);
+      else
+        m_timeLine->updateTime(TimeRange_Default_Frame_In, true);
 
       m_viewport->update();
     }
@@ -948,7 +970,10 @@ void MainWindow::saveGraph(bool saveAs)
   graph.setMetadata("timeline_end", num.toUtf8().constData(), false);
   num.setNum(m_timeLine->getTime());
   graph.setMetadata("timeline_current", num.toUtf8().constData(), false);
-
+  num.setNum(m_timeLine->loopMode());
+  graph.setMetadata("timeline_loopMode", num.toUtf8().constData(), false);
+  num.setNum(m_timeLine->simulationMode());
+  graph.setMetadata("timeline_simMode", num.toUtf8().constData(), false);
   try
   {
     FabricCore::RTVal camera = m_viewport->getCamera();
