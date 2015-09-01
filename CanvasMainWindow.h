@@ -132,4 +132,6 @@ private:
 
   QString m_windowTitle;
   QString m_lastFileName;
+
+  uint32_t m_lastSavedBindingVersion;
 };

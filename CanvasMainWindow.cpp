@@ -17,6 +17,7 @@
 #include <QtGui/QFileDialog>
 #include <QtGui/QMenu>
 #include <QtGui/QMenuBar>
+#include <QtGui/QMessageBox>
 #include <QtGui/QUndoView>
 #include <QtGui/QVBoxLayout>
 
@@ -205,6 +206,7 @@ MainWindow::MainWindow(
     m_host = m_client.getDFGHost();
 
     FabricCore::DFGBinding binding = m_host.createBindingToNewGraph();
+    m_lastSavedBindingVersion = binding.getVersion();
 
     FabricCore::DFGExec graph = binding.getExec();
 
@@ -409,9 +411,32 @@ MainWindow::MainWindow(
 
 void MainWindow::closeEvent( QCloseEvent *event )
 {
+  FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
+  if ( binding.getVersion() != m_lastSavedBindingVersion )
+  {
+    QMessageBox msgBox;
+    msgBox.setText( "Do you want to save your changes?" );
+    msgBox.setInformativeText( "Your changes will be lose if you don't save them." );
+    msgBox.setStandardButtons( QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
+    msgBox.setDefaultButton( QMessageBox::Save );
+    switch ( msgBox.exec() )
+    {
+      case QMessageBox::Discard:
+        break;
+      case QMessageBox::Cancel:
+        event->ignore();
+        return;
+      case QMessageBox::Save:
+      default:
+        saveGraph( false );
+        break;
+    }
+  }
+
   m_viewport->setManipulationActive(false);
   m_settings->setValue( "mainWindow/geometry", saveGeometry() );
   m_settings->setValue( "mainWindow/state", saveState() );
+
   QMainWindow::closeEvent( event );
 }
 
@@ -741,6 +766,7 @@ void MainWindow::onNewGraph()
     m_hasTimeLinePort = false;
 
     binding = m_host.createBindingToNewGraph();
+    m_lastSavedBindingVersion = binding.getVersion();
     FabricCore::DFGExec exec = binding.getExec();
 
     dfgController->setBindingExec( binding, FTL::StrRef(), exec );
@@ -817,6 +843,7 @@ void MainWindow::loadGraph( QString const &filePath )
 
       FabricCore::DFGBinding binding =
         m_host.createBindingFromJSON( json.c_str() );
+      m_lastSavedBindingVersion = binding.getVersion();
       FabricCore::DFGExec exec = binding.getExec();
       dfgController->setBindingExec( binding, FTL::StrRef(), exec );
 
@@ -964,6 +991,8 @@ void MainWindow::saveGraph(bool saveAs)
   onFileNameChanged( filePath );
 
   m_saveGraphAction->setEnabled(true);
+
+  m_lastSavedBindingVersion = binding.getVersion();
 }
 
 void MainWindow::setBlockCompilations( bool blockCompilations )
