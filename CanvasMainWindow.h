@@ -90,7 +90,8 @@ signals:
 protected:
 
   void closeEvent( QCloseEvent *event );
-  void saveGraph(bool saveAs);
+  bool saveGraph(bool saveAs);
+  bool checkUnsavedChanged();
 
 private:
 
