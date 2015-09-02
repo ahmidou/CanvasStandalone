@@ -267,6 +267,10 @@ MainWindow::MainWindow(
       this, SLOT(onValueChanged())
       );
     QObject::connect(
+      m_dfgWidget, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*))
+      );
+    QObject::connect(
       m_dfgWidget->getDFGController(), SIGNAL(dirty()),
       this, SLOT(onDirty())
       );
@@ -333,6 +337,20 @@ MainWindow::MainWindow(
 
 void MainWindow::closeEvent( QCloseEvent *event )
 {
+  if(!checkUnsavedChanged())
+  {
+    event->ignore();
+    return;  
+  }
+  m_viewport->setManipulationActive(false);
+  m_settings->setValue( "mainWindow/geometry", saveGeometry() );
+  m_settings->setValue( "mainWindow/state", saveState() );
+
+  QMainWindow::closeEvent( event );
+}
+
+bool MainWindow::checkUnsavedChanged()
+{
   FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
   if ( binding.getVersion() != m_lastSavedBindingVersion )
   {
@@ -341,28 +359,21 @@ void MainWindow::closeEvent( QCloseEvent *event )
     msgBox.setInformativeText( "Your changes will be lose if you don't save them." );
     msgBox.setStandardButtons( QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
     msgBox.setDefaultButton( QMessageBox::Save );
-    switch ( msgBox.exec() )
+    switch(msgBox.exec())
     {
       case QMessageBox::Discard:
-        break;
+        return true;
       case QMessageBox::Cancel:
-        event->ignore();
-        return;
+        return false;
       case QMessageBox::Save:
       default:
-        saveGraph( false );
-        break;
+        return saveGraph( false );
     }
   }
-
-  m_viewport->setManipulationActive(false);
-  m_settings->setValue( "mainWindow/geometry", saveGeometry() );
-  m_settings->setValue( "mainWindow/state", saveState() );
-
-  QMainWindow::closeEvent( event );
+  return true;
 }
 
- MainWindow::~MainWindow()
+MainWindow::~MainWindow()
 {
   if(m_manager)
     delete(m_manager);
@@ -605,16 +616,18 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
-    QObject::connect(graph, SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)),
-      this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
-    QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)),
-      this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
+    QObject::connect(graph, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*)));
+    QObject::connect(graph, SIGNAL(nodeEditRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeEditRequested(FabricUI::GraphView::Node*)));
+    QObject::connect(graph, SIGNAL(sidePanelInspectRequested(FabricUI::GraphView::SidePanel*)),
+      this, SLOT(onSidePanelInspectRequested(FabricUI::GraphView::SidePanel*)));
 
     m_setGraph = graph;
   }
 }
 
-void MainWindow::onNodeDoubleClicked(
+void MainWindow::onNodeInspectRequested(
   FabricUI::GraphView::Node *node
   )
 {
@@ -632,7 +645,14 @@ void MainWindow::onNodeDoubleClicked(
     );
 }
 
-void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel)
+void MainWindow::onNodeEditRequested(
+  FabricUI::GraphView::Node *node
+  )
+{
+  m_dfgWidget->maybeEditNode(node);
+}
+
+void MainWindow::onSidePanelInspectRequested(FabricUI::GraphView::SidePanel * panel)
 {
   FabricUI::DFG::DFGController *dfgController =
     m_dfgWidget->getUIController();
@@ -646,6 +666,10 @@ void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel
 void MainWindow::onNewGraph()
 {
   m_timeLine->pause();
+
+  if(!checkUnsavedChanged())
+    return;
+
   m_lastFileName = "";
   // m_saveGraphAction->setEnabled(false);
 
@@ -698,6 +722,11 @@ void MainWindow::onNewGraph()
 
 void MainWindow::onLoadGraph()
 {
+  m_timeLine->pause();
+
+  if(!checkUnsavedChanged())
+    return;
+
   QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
   QString filePath = QFileDialog::getOpenFileName(this, "Load preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
   if ( filePath.length() )
@@ -838,7 +867,7 @@ void MainWindow::onSaveGraphAs()
   saveGraph(true);
 }
 
-void MainWindow::saveGraph(bool saveAs)
+bool MainWindow::saveGraph(bool saveAs)
 {
   m_timeLine->pause();
 
@@ -857,7 +886,7 @@ void MainWindow::saveGraph(bool saveAs)
 
     filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
     if(filePath.length() == 0)
-      return;
+      return false;
     if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
       filePath = filePath.left(filePath.length() - 9);
   }
@@ -925,6 +954,8 @@ void MainWindow::saveGraph(bool saveAs)
   // m_saveGraphAction->setEnabled(true);
 
   m_lastSavedBindingVersion = binding.getVersion();
+
+  return true;
 }
 
 void MainWindow::setBlockCompilations( bool blockCompilations )

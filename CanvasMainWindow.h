@@ -69,8 +69,9 @@ public slots:
   void onValueChanged();
   void onStructureChanged();
   void onGraphSet(FabricUI::GraphView::Graph * graph);
-  void onNodeDoubleClicked(FabricUI::GraphView::Node * node);
-  void onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel);
+  void onNodeInspectRequested(FabricUI::GraphView::Node * node);
+  void onNodeEditRequested(FabricUI::GraphView::Node * node);
+  void onSidePanelInspectRequested(FabricUI::GraphView::SidePanel * panel);
   void hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString);
   void onNewGraph();
   void onLoadGraph();
@@ -92,7 +93,8 @@ signals:
 protected:
 
   void closeEvent( QCloseEvent *event );
-  void saveGraph(bool saveAs);
+  bool saveGraph(bool saveAs);
+  bool checkUnsavedChanged();
 
 private:
 
