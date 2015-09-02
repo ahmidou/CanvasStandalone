@@ -348,6 +348,10 @@ MainWindow::MainWindow(
       this, SLOT(onValueChanged())
       );
     QObject::connect(
+      m_dfgWidget, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*))
+      );
+    QObject::connect(
       m_dfgWidget->getDFGController(), SIGNAL(dirty()),
       this, SLOT(onDirty())
       );
@@ -705,16 +709,18 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
-    QObject::connect(graph, SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)),
-      this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
-    QObject::connect(graph, SIGNAL(sidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)),
-      this, SLOT(onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel*)));
+    QObject::connect(graph, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*)));
+    QObject::connect(graph, SIGNAL(nodeEditRequested(FabricUI::GraphView::Node*)),
+      this, SLOT(onNodeEditRequested(FabricUI::GraphView::Node*)));
+    QObject::connect(graph, SIGNAL(sidePanelInspectRequested(FabricUI::GraphView::SidePanel*)),
+      this, SLOT(onSidePanelInspectRequested(FabricUI::GraphView::SidePanel*)));
 
     m_setGraph = graph;
   }
 }
 
-void MainWindow::onNodeDoubleClicked(
+void MainWindow::onNodeInspectRequested(
   FabricUI::GraphView::Node *node
   )
 {
@@ -732,7 +738,14 @@ void MainWindow::onNodeDoubleClicked(
     );
 }
 
-void MainWindow::onSidePanelDoubleClicked(FabricUI::GraphView::SidePanel * panel)
+void MainWindow::onNodeEditRequested(
+  FabricUI::GraphView::Node *node
+  )
+{
+  m_dfgWidget->maybeEditNode(node);
+}
+
+void MainWindow::onSidePanelInspectRequested(FabricUI::GraphView::SidePanel * panel)
 {
   FabricUI::DFG::DFGController *dfgController =
     m_dfgWidget->getUIController();
