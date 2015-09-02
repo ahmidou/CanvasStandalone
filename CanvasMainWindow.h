@@ -14,6 +14,7 @@
 #include <FabricUI/DFG/DFGUI.h>
 #include <FabricUI/DFG/DFGValueEditor.h>
 #include <FabricUI/DFG/DFGUICmdHandler_QUndo.h>
+#include <FabricUI/DFG/DFGLogWidget.h>
 
 #include <ASTWrapper/KLASTManager.h>
 
@@ -75,14 +76,15 @@ public slots:
   void onLoadGraph();
   void onSaveGraph();
   void onSaveGraphAs();
-  void onCut();
-  void onCopy();
-  void onPaste();
   void onFrameChanged(int frame);
   void updateFPS();
   void onPortManipulationRequested(QString portName);
   void setBlockCompilations( bool blockCompilations );
   void onFileNameChanged(QString fileName);
+
+private slots:
+
+  void onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix);
 
 signals:
   void contentChanged();
@@ -108,6 +110,7 @@ private:
   DFG::DFGValueEditor * m_dfgValueEditor;
   FabricUI::GraphView::Graph * m_setGraph;
   Viewports::GLViewportWidget * m_viewport;
+  DFG::DFGLogWidget * m_logWidget;
   QUndoView *m_qUndoView;
   Viewports::TimeLineWidget * m_timeLine;
   bool m_hasTimeLinePort;
@@ -125,9 +128,6 @@ private:
   QAction *m_saveGraphAction;
   QAction *m_saveGraphAsAction;
   QAction *m_quitAction;
-  QAction *m_cutAction;
-  QAction *m_copyAction;
-  QAction *m_pasteAction;
   QAction *m_manipAction;
 
   QString m_windowTitle;

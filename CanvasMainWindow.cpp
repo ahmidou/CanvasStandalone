@@ -4,7 +4,6 @@
 
 #include "CanvasMainWindow.h"
 
-#include <FabricUI/DFG/DFGLogWidget.h>
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
@@ -99,57 +98,6 @@ MainWindow::MainWindow(
 
   DFG::DFGConfig config;
 
-  // top menu
-  QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-  m_newGraphAction = fileMenu->addAction("New Graph");
-  m_newGraphAction->setShortcut(QKeySequence::New);
-  m_loadGraphAction = fileMenu->addAction("Load Graph...");
-  m_loadGraphAction->setShortcut(QKeySequence::Open);
-  m_saveGraphAction = fileMenu->addAction("Save Graph");
-  m_saveGraphAction->setShortcut(QKeySequence::Save);
-  m_saveGraphAction->setEnabled(false);
-  m_saveGraphAsAction = fileMenu->addAction("Save Graph As...");
-  m_saveGraphAsAction->setShortcut(QKeySequence::SaveAs);
-  fileMenu->addSeparator();
-  m_quitAction = fileMenu->addAction("Quit");
-  m_quitAction->setShortcut(QKeySequence::Quit);
-
-  QObject::connect(m_newGraphAction, SIGNAL(triggered()), this, SLOT(onNewGraph()));
-  QObject::connect(m_loadGraphAction, SIGNAL(triggered()), this, SLOT(onLoadGraph()));
-  QObject::connect(m_saveGraphAction, SIGNAL(triggered()), this, SLOT(onSaveGraph()));
-  QObject::connect(m_saveGraphAsAction, SIGNAL(triggered()), this, SLOT(onSaveGraphAs()));
-  QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
-
-  QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
-
-  QAction *undoAction = m_qUndoStack.createUndoAction( editMenu );
-  undoAction->setShortcut( QKeySequence::Undo );
-  editMenu->addAction( undoAction );
-
-  QAction *redoAction = m_qUndoStack.createRedoAction( editMenu );
-  redoAction->setShortcut( QKeySequence::Redo );
-  editMenu->addAction( redoAction );
-
-  editMenu->addSeparator();
-
-  m_cutAction = editMenu->addAction("Cut");
-  m_cutAction->setShortcut( QKeySequence::Cut );
-  QObject::connect(m_cutAction, SIGNAL(triggered()), this, SLOT(onCut()));
-  m_copyAction = editMenu->addAction("Copy");
-  m_copyAction->setShortcut( QKeySequence::Copy );
-  QObject::connect(m_copyAction, SIGNAL(triggered()), this, SLOT(onCopy()));
-  m_pasteAction = editMenu->addAction("Paste");
-  m_pasteAction->setShortcut( QKeySequence::Paste );
-  QObject::connect(m_pasteAction, SIGNAL(triggered()), this, SLOT(onPaste()));
-
-  editMenu->addSeparator();
-
-  m_manipAction = editMenu->addAction("Toggle Manipulation");
-  m_manipAction->setShortcut(Qt::Key_Q);
-
-  QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
-  QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
-
   m_slowOperationLabel = new QLabel();
 
   QLayout *slowOperationLayout = new QVBoxLayout();
@@ -219,33 +167,9 @@ MainWindow::MainWindow(
 
     m_viewport = new Viewports::GLViewportWidget(&m_client, config.defaultWindowColor, glFormat, this, m_settings);
     setCentralWidget(m_viewport);
+
     QObject::connect(this, SIGNAL(contentChanged()), m_viewport, SLOT(redraw()));
     QObject::connect(m_viewport, SIGNAL(portManipulationRequested(QString)), this, SLOT(onPortManipulationRequested(QString)));
-    QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-    setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
-    setStageVisibleAction->setCheckable( true );
-    setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
-    QObject::connect(
-      setStageVisibleAction, SIGNAL(toggled(bool)),
-      m_viewport, SLOT(setStageVisible(bool))
-      );
-
-    QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
-    setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
-    setUsingStageAction->setCheckable( true );
-    setUsingStageAction->setChecked( m_viewport->isUsingStage() );
-    QObject::connect(
-      setUsingStageAction, SIGNAL(toggled(bool)),
-      m_viewport, SLOT(setUsingStage(bool))
-      );
-
-    QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
-    blockCompilationsAction->setCheckable( true );
-    blockCompilationsAction->setChecked( false );
-    QObject::connect(
-      blockCompilationsAction, SIGNAL(toggled(bool)),
-      this, SLOT(setBlockCompilations(bool))
-      );
 
     // graph view
     m_dfgWidget = new DFG::DFGWidget(
@@ -308,16 +232,11 @@ MainWindow::MainWindow(
     addDockWidget( Qt::RightDockWidgetArea, dfgValueEditorDockWidget );
 
     // log widget
-    QWidget *logWidget = new DFG::DFGLogWidget;
-    QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
-    QObject::connect(
-      clearLogAction, SIGNAL(triggered()),
-      logWidget, SLOT(clear())
-      );
+    m_logWidget = new DFG::DFGLogWidget;
     QDockWidget *logDockWidget = new QDockWidget( "Log Messages", this );
     logDockWidget->setObjectName( "Log" );
     logDockWidget->setFeatures( dockFeatures );
-    logDockWidget->setWidget( logWidget );
+    logDockWidget->setWidget( m_logWidget );
     logDockWidget->hide();
     addDockWidget( Qt::TopDockWidgetArea, logDockWidget, Qt::Vertical );
 
@@ -362,7 +281,7 @@ MainWindow::MainWindow(
       );
 
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
-    QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
+    // QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
 
     QObject::connect(m_dfgWidget, SIGNAL(onGraphSet(FabricUI::GraphView::Graph*)),
       this, SLOT(onGraphSet(FabricUI::GraphView::Graph*)));
@@ -370,13 +289,16 @@ MainWindow::MainWindow(
     restoreGeometry( settings->value("mainWindow/geometry").toByteArray() );
     restoreState( settings->value("mainWindow/state").toByteArray() );
 
-    viewMenu->addAction( setStageVisibleAction );
-    viewMenu->addAction( setUsingStageAction );
-    viewMenu->addSeparator();
-    viewMenu->addAction( clearLogAction );
-    viewMenu->addSeparator();
-    viewMenu->addAction( blockCompilationsAction );
+    // populate the menu bar
+    QObject::connect(
+      m_dfgWidget, 
+      SIGNAL(additionalMenuActionsRequested(QString, QMenu*, bool)), 
+      this, SLOT(onAdditionalMenuActionsRequested(QString, QMenu *, bool))
+      );
+    m_dfgWidget->populateMenuBar(menuBar());
 
+    // window menu
+    QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
     QAction * toggleAction = NULL;
     toggleAction = dfgDock->toggleViewAction();
     toggleAction->setShortcut( Qt::CTRL + Qt::Key_4 );
@@ -509,21 +431,6 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_viewport->toggleManipulation();
   }
-}
-
-void MainWindow::onCopy()
-{
-  m_dfgWidget->getUIController()->copy();
-}
-
-void MainWindow::onCut()
-{
-  m_dfgWidget->getUIController()->cmdCut();
-}
-
-void MainWindow::onPaste()
-{
-  m_dfgWidget->getUIController()->cmdPaste();
 }
 
 void MainWindow::onFrameChanged(int frame)
@@ -740,7 +647,7 @@ void MainWindow::onNewGraph()
 {
   m_timeLine->pause();
   m_lastFileName = "";
-  m_saveGraphAction->setEnabled(false);
+  // m_saveGraphAction->setEnabled(false);
 
   try
   {
@@ -800,7 +707,7 @@ void MainWindow::onLoadGraph()
     m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
     loadGraph( filePath );
   }
-  m_saveGraphAction->setEnabled(true);
+  // m_saveGraphAction->setEnabled(true);
 }
 
 void MainWindow::loadGraph( QString const &filePath )
@@ -918,7 +825,7 @@ void MainWindow::loadGraph( QString const &filePath )
   }
 
   m_lastFileName = filePath;
-  m_saveGraphAction->setEnabled(true);
+  // m_saveGraphAction->setEnabled(true);
 }
 
 void MainWindow::onSaveGraph()
@@ -1015,7 +922,7 @@ void MainWindow::saveGraph(bool saveAs)
 
   onFileNameChanged( filePath );
 
-  m_saveGraphAction->setEnabled(true);
+  // m_saveGraphAction->setEnabled(true);
 
   m_lastSavedBindingVersion = binding.getVersion();
 }
@@ -1033,4 +940,99 @@ void MainWindow::onFileNameChanged(QString fileName)
     setWindowTitle( m_windowTitle );
   else
     setWindowTitle( m_windowTitle + " - " + fileName );
+}
+
+void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix)
+{
+  if(name == "File")
+  {
+    if(prefix)
+    {
+      m_newGraphAction = menu->addAction("New Graph");
+      m_newGraphAction->setShortcut(QKeySequence::New);
+      m_loadGraphAction = menu->addAction("Load Graph...");
+      m_loadGraphAction->setShortcut(QKeySequence::Open);
+      m_saveGraphAction = menu->addAction("Save Graph");
+      m_saveGraphAction->setShortcut(QKeySequence::Save);
+      m_saveGraphAction->setEnabled(false);
+      m_saveGraphAsAction = menu->addAction("Save Graph As...");
+      m_saveGraphAsAction->setShortcut(QKeySequence::SaveAs);
+    
+      QObject::connect(m_newGraphAction, SIGNAL(triggered()), this, SLOT(onNewGraph()));
+      QObject::connect(m_loadGraphAction, SIGNAL(triggered()), this, SLOT(onLoadGraph()));
+      QObject::connect(m_saveGraphAction, SIGNAL(triggered()), this, SLOT(onSaveGraph()));
+      QObject::connect(m_saveGraphAsAction, SIGNAL(triggered()), this, SLOT(onSaveGraphAs()));
+    }
+    else
+    {
+      menu->addSeparator();
+      m_quitAction = menu->addAction("Quit");
+      m_quitAction->setShortcut(QKeySequence::Quit);
+      
+      QObject::connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
+    }
+  }
+  else if(name == "Edit")
+  {
+    if(prefix)
+    {
+      QAction *undoAction = m_qUndoStack.createUndoAction( menu );
+      undoAction->setShortcut( QKeySequence::Undo );
+      menu->addAction( undoAction );
+      QAction *redoAction = m_qUndoStack.createRedoAction( menu );
+      redoAction->setShortcut( QKeySequence::Redo );
+      menu->addAction( redoAction );
+    }
+    else
+    {
+      menu->addSeparator();
+
+      m_manipAction = menu->addAction("Toggle Manipulation");
+      m_manipAction->setShortcut(Qt::Key_Q);
+    }
+  }
+  else if(name == "View")
+  {
+    if(prefix)
+    {
+      QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
+      setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
+      setStageVisibleAction->setCheckable( true );
+      setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+      QObject::connect(
+        setStageVisibleAction, SIGNAL(toggled(bool)),
+        m_viewport, SLOT(setStageVisible(bool))
+        );
+
+      QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
+      setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+      setUsingStageAction->setCheckable( true );
+      setUsingStageAction->setChecked( m_viewport->isUsingStage() );
+      QObject::connect(
+        setUsingStageAction, SIGNAL(toggled(bool)),
+        m_viewport, SLOT(setUsingStage(bool))
+        );
+
+      QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
+      QObject::connect(
+        clearLogAction, SIGNAL(triggered()),
+        m_logWidget, SLOT(clear())
+        );
+
+      QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
+      blockCompilationsAction->setCheckable( true );
+      blockCompilationsAction->setChecked( false );
+      QObject::connect(
+        blockCompilationsAction, SIGNAL(toggled(bool)),
+        this, SLOT(setBlockCompilations(bool))
+        );
+
+      menu->addAction( setStageVisibleAction );
+      menu->addAction( setUsingStageAction );
+      menu->addSeparator();
+      menu->addAction( clearLogAction );
+      menu->addSeparator();
+      menu->addAction( blockCompilationsAction );
+    }
+  }
 }
