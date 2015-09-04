@@ -1044,6 +1044,13 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
         m_viewport, SLOT(setUsingStage(bool))
         );
 
+      QAction *resetCameraAction = new QAction( "&Reset Camera", 0 );
+      resetCameraAction->setShortcut(Qt::Key_R);
+      QObject::connect(
+        resetCameraAction, SIGNAL(triggered()),
+        m_viewport, SLOT(resetCamera())
+        );
+
       QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
       QObject::connect(
         clearLogAction, SIGNAL(triggered()),
@@ -1060,6 +1067,8 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
 
       menu->addAction( setStageVisibleAction );
       menu->addAction( setUsingStageAction );
+      menu->addSeparator();
+      menu->addAction( resetCameraAction );
       menu->addSeparator();
       menu->addAction( clearLogAction );
       menu->addSeparator();
