@@ -357,7 +357,7 @@ bool MainWindow::checkUnsavedChanged()
   {
     QMessageBox msgBox;
     msgBox.setText( "Do you want to save your changes?" );
-    msgBox.setInformativeText( "Your changes will be lose if you don't save them." );
+    msgBox.setInformativeText( "Your changes will be lost if you don't save them." );
     msgBox.setStandardButtons( QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
     msgBox.setDefaultButton( QMessageBox::Save );
     switch(msgBox.exec())
