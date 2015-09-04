@@ -71,7 +71,7 @@ public slots:
   void onGraphSet(FabricUI::GraphView::Graph * graph);
   void onNodeInspectRequested(FabricUI::GraphView::Node * node);
   void onNodeEditRequested(FabricUI::GraphView::Node * node);
-  void onSidePanelInspectRequested(FabricUI::GraphView::SidePanel * panel);
+  void onSidePanelInspectRequested();
   void hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString);
   void onNewGraph();
   void onLoadGraph();

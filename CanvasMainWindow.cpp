@@ -326,6 +326,7 @@ MainWindow::MainWindow(
 
     onFrameChanged(m_timeLine->getTime());
     onGraphSet(m_dfgWidget->getUIGraph());
+    onSidePanelInspectRequested();
   }
   catch(FabricCore::Exception e)
   {
@@ -620,8 +621,10 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
       this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*)));
     QObject::connect(graph, SIGNAL(nodeEditRequested(FabricUI::GraphView::Node*)),
       this, SLOT(onNodeEditRequested(FabricUI::GraphView::Node*)));
-    QObject::connect(graph, SIGNAL(sidePanelInspectRequested(FabricUI::GraphView::SidePanel*)),
-      this, SLOT(onSidePanelInspectRequested(FabricUI::GraphView::SidePanel*)));
+    QObject::connect(
+      graph, SIGNAL(sidePanelInspectRequested()),
+      this, SLOT(onSidePanelInspectRequested())
+      );
 
     m_setGraph = graph;
   }
@@ -652,7 +655,7 @@ void MainWindow::onNodeEditRequested(
   m_dfgWidget->maybeEditNode(node);
 }
 
-void MainWindow::onSidePanelInspectRequested(FabricUI::GraphView::SidePanel * panel)
+void MainWindow::onSidePanelInspectRequested()
 {
   FabricUI::DFG::DFGController *dfgController =
     m_dfgWidget->getUIController();
@@ -703,8 +706,7 @@ void MainWindow::onNewGraph()
     FabricCore::DFGExec exec = binding.getExec();
 
     dfgController->setBindingExec( binding, FTL::StrRef(), exec );
-
-    m_dfgValueEditor->onArgsChanged();
+    onSidePanelInspectRequested();
 
     emit contentChanged();
     onStructureChanged();
@@ -784,6 +786,7 @@ void MainWindow::loadGraph( QString const &filePath )
       m_lastSavedBindingVersion = binding.getVersion();
       FabricCore::DFGExec exec = binding.getExec();
       dfgController->setBindingExec( binding, FTL::StrRef(), exec );
+      onSidePanelInspectRequested();
 
       m_dfgWidget->getUIController()->checkErrors();
 
@@ -791,7 +794,6 @@ void MainWindow::loadGraph( QString const &filePath )
 
       m_dfgWidget->getUIController()->bindUnboundRTVals();
       m_dfgWidget->getUIController()->execute();
-      m_dfgValueEditor->onArgsChanged();
 
       QString tl_start = exec.getMetadata("timeline_start");
       QString tl_end = exec.getMetadata("timeline_end");
