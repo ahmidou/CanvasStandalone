@@ -86,6 +86,7 @@ public slots:
 private slots:
 
   void onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix);
+  void autosave();
 
 signals:
   void contentChanged();
@@ -95,6 +96,11 @@ protected:
   void closeEvent( QCloseEvent *event );
   bool saveGraph(bool saveAs);
   bool checkUnsavedChanged();
+
+  bool performSave(
+    FabricCore::DFGBinding &binding,
+    QString const &filePath
+    );
 
 private:
 
@@ -136,4 +142,8 @@ private:
   QString m_lastFileName;
 
   uint32_t m_lastSavedBindingVersion;
+
+  static const uint32_t s_autosaveIntervalSec = 30;
+  std::string m_autosaveFilename;
+  uint32_t m_lastAutosaveBindingVersion;
 };
