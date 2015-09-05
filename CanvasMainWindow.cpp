@@ -9,6 +9,10 @@
 #include <FabricUI/Licensing/Licensing.h>
 #include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
 
+#include <FTL/CStrRef.h>
+#include <FTL/FS.h>
+#include <FTL/Path.h>
+
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
@@ -19,6 +23,8 @@
 #include <QtGui/QMessageBox>
 #include <QtGui/QUndoView>
 #include <QtGui/QVBoxLayout>
+
+#include <sstream>
 
 FabricServices::Persistence::RTValToJSONEncoder sRTValEncoder;
 FabricServices::Persistence::RTValFromJSONDecoder sRTValDecoder;
@@ -80,6 +86,33 @@ MainWindow::MainWindow(
   : m_dfguiCommandHandler( &m_qUndoStack )
   , m_settings( settings )
 {
+  std::stringstream autosaveBasename;
+  autosaveBasename << FTL_STR("autosave.");
+#if defined(FTL_PLATFORM_POSIX)
+  autosaveBasename << ::getpid();
+#elif defined(FTL_PLATFORM_WINDOWS)
+  autosaveBasename << ::GetProcessId( ::GetCurrentProcess() );
+#endif
+  autosaveBasename << FTL_STR(".canvas");
+
+  FTL::CStrRef fabricDir = FabricCore::GetFabricDir();
+  m_autosaveFilename = fabricDir;
+  FTL::PathAppendEntry( m_autosaveFilename, FTL_STR("autosave") );
+  FTL::FSMkDir( m_autosaveFilename.c_str() );
+  FTL::PathAppendEntry( m_autosaveFilename, autosaveBasename.str() );
+  printf(
+    "Will autosave to %s every %u seconds\n",
+    m_autosaveFilename.c_str(),
+    s_autosaveIntervalSec
+    );
+
+  QTimer *autosaveTimer = new QTimer( this );
+  connect(
+    autosaveTimer, SIGNAL(timeout()),
+    this, SLOT(autosave())
+    );
+  autosaveTimer->start( s_autosaveIntervalSec * 1000 );
+
   m_windowTitle = "Fabric Engine";
   onFileNameChanged("");
 
@@ -155,6 +188,7 @@ MainWindow::MainWindow(
 
     FabricCore::DFGBinding binding = m_host.createBindingToNewGraph();
     m_lastSavedBindingVersion = binding.getVersion();
+    m_lastAutosaveBindingVersion = m_lastSavedBindingVersion;
 
     FabricCore::DFGExec graph = binding.getExec();
 
@@ -378,6 +412,8 @@ MainWindow::~MainWindow()
 {
   if(m_manager)
     delete(m_manager);
+
+  FTL::FSMaybeDeleteFile( m_autosaveFilename );
 }
 
 void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
@@ -869,36 +905,11 @@ void MainWindow::onSaveGraphAs()
   saveGraph(true);
 }
 
-bool MainWindow::saveGraph(bool saveAs)
+bool MainWindow::performSave(
+  FabricCore::DFGBinding &binding,
+  QString const &filePath
+  )
 {
-  m_timeLine->pause();
-
-  QString filePath = m_lastFileName;
-  if(filePath.length() == 0 || saveAs)
-  {
-    QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-    if(m_lastFileName.length() > 0)
-    {
-      filePath = m_lastFileName;
-      if(filePath.toLower().endsWith(".dfg.json"))
-        filePath = filePath.left(filePath.length() - 9);
-    }
-    else
-      filePath = lastPresetFolder;
-
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
-    if(filePath.length() == 0)
-      return false;
-    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
-      filePath = filePath.left(filePath.length() - 9);
-  }
-
-  QDir dir(filePath);
-  dir.cdUp();
-  m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
-
-  FabricCore::DFGBinding &binding =
-    m_dfgWidget->getUIController()->getBinding();
   FabricCore::DFGExec graph = binding.getExec();
 
   QString num;
@@ -940,14 +951,50 @@ bool MainWindow::saveGraph(bool saveAs)
     {
       fwrite(jsonData, jsonSize, 1, file);
       fclose(file);
-
-      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
     }
   }
   catch(FabricCore::Exception e)
   {
     printf("Exception: %s\n", e.getDesc_cstr());
+    return false;
   }
+
+  return true;
+}
+
+bool MainWindow::saveGraph(bool saveAs)
+{
+  m_timeLine->pause();
+
+  QString filePath = m_lastFileName;
+  if(filePath.length() == 0 || saveAs)
+  {
+    QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
+    if(m_lastFileName.length() > 0)
+    {
+      filePath = m_lastFileName;
+      if(filePath.toLower().endsWith(".dfg.json"))
+        filePath = filePath.left(filePath.length() - 9);
+    }
+    else
+      filePath = lastPresetFolder;
+
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
+    if(filePath.length() == 0)
+      return false;
+    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
+      filePath = filePath.left(filePath.length() - 9);
+  }
+
+  QDir dir(filePath);
+  dir.cdUp();
+  m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
+
+  FabricCore::DFGBinding &binding =
+    m_dfgWidget->getUIController()->getBinding();
+
+  if ( performSave( binding, filePath ) )
+    m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
 
   m_lastFileName = filePath;
 
@@ -1075,6 +1122,27 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       menu->addAction( clearLogAction );
       menu->addSeparator();
       menu->addAction( blockCompilationsAction );
+    }
+  }
+}
+
+void MainWindow::autosave()
+{
+  FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
+  if ( !!binding )
+  {
+    uint32_t bindingVersion = binding.getVersion();
+    if ( bindingVersion != m_lastAutosaveBindingVersion )
+    {
+      std::string tmpAutosaveFilename = m_autosaveFilename;
+      tmpAutosaveFilename += FTL_STR(".tmp");
+
+      if ( performSave( binding, tmpAutosaveFilename.c_str() ) )
+      {
+        FTL::FSMaybeMoveFile( tmpAutosaveFilename, m_autosaveFilename );
+
+        m_lastAutosaveBindingVersion = bindingVersion;
+      }
     }
   }
 }
