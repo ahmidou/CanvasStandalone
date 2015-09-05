@@ -600,13 +600,15 @@ void MainWindow::onStructureChanged()
       unsigned portCount = graph.getExecPortCount();
       for(unsigned i=0;i<portCount;i++)
       {
-        if(graph.getExecPortType(i) == FabricCore::DFGPortType_Out)
+        if ( graph.getExecPortType(i) == FabricCore::DFGPortType_Out )
           continue;
-        FTL::StrRef portName = graph.getExecPortName(i);
-        if(portName != "timeline")
+        FTL::CStrRef portName = graph.getExecPortName( i );
+        if ( portName != FTL_STR("timeline") )
           continue;
-        FTL::StrRef dataType = graph.getExecPortResolvedType(i);
-        if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
+        if ( !graph.isExecPortResolvedType( i, "SInt32" )
+          && !graph.isExecPortResolvedType( i, "UInt32" )
+          && !graph.isExecPortResolvedType( i, "Float32" )
+          && !graph.isExecPortResolvedType( i, "Float64" ) )
           continue;
         m_hasTimeLinePort = true;
         break;
