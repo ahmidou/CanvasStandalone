@@ -123,7 +123,7 @@ MainWindow::MainWindow(
   dockOpt |= AllowNestedDocks;
   dockOpt ^= AllowTabbedDocks;
   setDockOptions(dockOpt);
-  m_hasTimeLinePort = false;
+  m_timelinePortIndex = -1;
   m_viewport = NULL;
   m_timeLine = NULL;
   m_dfgWidget = NULL;
@@ -493,25 +493,38 @@ void MainWindow::onFrameChanged(int frame)
     m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
   }
 
-  if(!m_hasTimeLinePort)
+  if ( m_timelinePortIndex == -1 )
     return;
 
   try
   {
-    FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
-    FabricCore::RTVal val = binding.getArgValue("timeline");
-    if(!val.isValid())
-      binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
-    else
-    {
-      std::string typeName = val.getTypeName().getStringCString();
-      if(typeName == "SInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
-      else if(typeName == "UInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructUInt32(m_client, frame), false);
-      else if(typeName == "Float32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructFloat32(m_client, frame), false);
-    }
+    FabricCore::DFGBinding binding =
+      m_dfgWidget->getUIController()->getBinding();
+    FabricCore::DFGExec exec = binding.getExec();
+    if ( exec.isExecPortResolvedType( m_timelinePortIndex, "SInt32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructSInt32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "UInt32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructUInt32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "Float32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructFloat32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "Float64" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructFloat64( m_client, frame ),
+        false
+        );
   }
   catch(FabricCore::Exception e)
   {
@@ -592,7 +605,7 @@ void MainWindow::onStructureChanged()
 {
   if(m_dfgWidget->getUIController()->isViewingRootGraph())
   {
-    m_hasTimeLinePort = false;
+    m_timelinePortIndex = -1;
     try
     {
       FabricCore::DFGExec graph =
@@ -610,7 +623,7 @@ void MainWindow::onStructureChanged()
           && !graph.isExecPortResolvedType( i, "Float32" )
           && !graph.isExecPortResolvedType( i, "Float64" ) )
           continue;
-        m_hasTimeLinePort = true;
+        m_timelinePortIndex = int( i );
         break;
       }
     }
@@ -738,7 +751,7 @@ void MainWindow::onNewGraph()
 
     QCoreApplication::processEvents();
 
-    m_hasTimeLinePort = false;
+    m_timelinePortIndex = -1;
 
     binding = m_host.createBindingToNewGraph();
     m_lastSavedBindingVersion = binding.getVersion();
@@ -783,7 +796,7 @@ void MainWindow::onLoadGraph()
 void MainWindow::loadGraph( QString const &filePath )
 {
   m_timeLine->pause();
-  m_hasTimeLinePort = false;
+  m_timelinePortIndex = -1;
 
   try
   {

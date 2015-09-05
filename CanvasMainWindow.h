@@ -121,7 +121,7 @@ private:
   DFG::DFGLogWidget * m_logWidget;
   QUndoView *m_qUndoView;
   Viewports::TimeLineWidget * m_timeLine;
-  bool m_hasTimeLinePort;
+  int m_timelinePortIndex;
   QStatusBar *m_statusBar;
   QTimer m_fpsTimer;
   QLabel *m_fpsLabel;
