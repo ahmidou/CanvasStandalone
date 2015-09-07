@@ -119,6 +119,18 @@ MainWindow::MainWindow(
 
   DFG::DFGWidget::setSettings(m_settings);
 
+  m_newGraphAction = NULL;
+  m_loadGraphAction = NULL;
+  m_saveGraphAction = NULL;
+  m_saveGraphAsAction = NULL;
+  m_quitAction = NULL;
+  m_manipAction = NULL;
+  m_setStageVisibleAction = NULL;
+  m_setUsingStageAction = NULL;
+  m_resetCameraAction = NULL;
+  m_clearLogAction = NULL;
+  m_blockCompilationsAction = NULL;
+
   DockOptions dockOpt = dockOptions();
   dockOpt |= AllowNestedDocks;
   dockOpt ^= AllowTabbedDocks;
@@ -317,6 +329,11 @@ MainWindow::MainWindow(
     QObject::connect(
       m_dfgWidget->getDFGController(), SIGNAL(nodeRemoved(FTL::CStrRef)),
       m_dfgValueEditor, SLOT(onNodeRemoved(FTL::CStrRef))
+      );
+
+    QObject::connect(
+      m_dfgWidget->getTabSearchWidget(), SIGNAL(enabled(bool)),
+      this, SLOT(enableShortCuts(bool))
       );
 
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
@@ -1059,6 +1076,32 @@ void MainWindow::onFileNameChanged(QString fileName)
     setWindowTitle( m_windowTitle + " - " + fileName );
 }
 
+void MainWindow::enableShortCuts(bool enabled)
+{
+  if(m_newGraphAction)
+    m_newGraphAction->blockSignals(enabled);
+  if(m_loadGraphAction)
+    m_loadGraphAction->blockSignals(enabled);
+  if(m_saveGraphAction)
+    m_saveGraphAction->blockSignals(enabled);
+  if(m_saveGraphAsAction)
+    m_saveGraphAsAction->blockSignals(enabled);
+  if(m_quitAction)
+    m_quitAction->blockSignals(enabled);
+  if(m_manipAction)
+    m_manipAction->blockSignals(enabled);
+  if(m_setStageVisibleAction)
+    m_setStageVisibleAction->blockSignals(enabled);
+  if(m_setUsingStageAction)
+    m_setUsingStageAction->blockSignals(enabled);
+  if(m_resetCameraAction)
+    m_resetCameraAction->blockSignals(enabled);
+  if(m_clearLogAction)
+    m_clearLogAction->blockSignals(enabled);
+  if(m_blockCompilationsAction)
+    m_blockCompilationsAction->blockSignals(enabled);
+}
+
 void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix)
 {
   if(name == "File")
@@ -1104,61 +1147,66 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
     {
       menu->addSeparator();
 
-      m_manipAction = menu->addAction("Toggle Manipulation");
+      m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
       m_manipAction->setShortcut(Qt::Key_Q);
+      m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+      m_viewport->addAction(m_manipAction);
+      menu->addAction(m_manipAction);
     }
   }
   else if(name == "View")
   {
     if(prefix)
     {
-      QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-      setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
-      setStageVisibleAction->setCheckable( true );
-      setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+      m_setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
+      m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
+      m_setStageVisibleAction->setCheckable( true );
+      m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
       QObject::connect(
-        setStageVisibleAction, SIGNAL(toggled(bool)),
+        m_setStageVisibleAction, SIGNAL(toggled(bool)),
         m_viewport, SLOT(setStageVisible(bool))
         );
 
-      QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
-      setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
-      setUsingStageAction->setCheckable( true );
-      setUsingStageAction->setChecked( m_viewport->isUsingStage() );
+      m_setUsingStageAction = new QAction( "Use &Stage", 0 );
+      m_setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+      m_setUsingStageAction->setCheckable( true );
+      m_setUsingStageAction->setChecked( m_viewport->isUsingStage() );
       QObject::connect(
-        setUsingStageAction, SIGNAL(toggled(bool)),
+        m_setUsingStageAction, SIGNAL(toggled(bool)),
         m_viewport, SLOT(setUsingStage(bool))
         );
 
-      QAction *resetCameraAction = new QAction( "&Reset Camera", 0 );
-      resetCameraAction->setShortcut(Qt::Key_R);
+      m_resetCameraAction = new QAction( "&Reset Camera", m_viewport );
+      m_resetCameraAction->setShortcut(Qt::Key_R);
+      m_resetCameraAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
       QObject::connect(
-        resetCameraAction, SIGNAL(triggered()),
+        m_resetCameraAction, SIGNAL(triggered()),
         m_viewport, SLOT(resetCamera())
         );
+      m_viewport->addAction(m_resetCameraAction);
 
-      QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
+      m_clearLogAction = new QAction( "&Clear Log Messages", 0 );
       QObject::connect(
-        clearLogAction, SIGNAL(triggered()),
+        m_clearLogAction, SIGNAL(triggered()),
         m_logWidget, SLOT(clear())
         );
 
-      QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
-      blockCompilationsAction->setCheckable( true );
-      blockCompilationsAction->setChecked( false );
+      m_blockCompilationsAction = new QAction( "&Block compilations", 0 );
+      m_blockCompilationsAction->setCheckable( true );
+      m_blockCompilationsAction->setChecked( false );
       QObject::connect(
-        blockCompilationsAction, SIGNAL(toggled(bool)),
+        m_blockCompilationsAction, SIGNAL(toggled(bool)),
         this, SLOT(setBlockCompilations(bool))
         );
 
-      menu->addAction( setStageVisibleAction );
-      menu->addAction( setUsingStageAction );
+      menu->addAction( m_setStageVisibleAction );
+      menu->addAction( m_setUsingStageAction );
       menu->addSeparator();
-      menu->addAction( resetCameraAction );
+      menu->addAction( m_resetCameraAction );
       menu->addSeparator();
-      menu->addAction( clearLogAction );
+      menu->addAction( m_clearLogAction );
       menu->addSeparator();
-      menu->addAction( blockCompilationsAction );
+      menu->addAction( m_blockCompilationsAction );
     }
   }
 }

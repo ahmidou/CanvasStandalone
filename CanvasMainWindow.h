@@ -82,6 +82,7 @@ public slots:
   void onPortManipulationRequested(QString portName);
   void setBlockCompilations( bool blockCompilations );
   void onFileNameChanged(QString fileName);
+  void enableShortCuts(bool enabled);
 
 private slots:
 
@@ -137,6 +138,12 @@ private:
   QAction *m_saveGraphAsAction;
   QAction *m_quitAction;
   QAction *m_manipAction;
+
+  QAction * m_setStageVisibleAction;
+  QAction * m_setUsingStageAction;
+  QAction * m_resetCameraAction;
+  QAction * m_clearLogAction;
+  QAction * m_blockCompilationsAction;
 
   QString m_windowTitle;
   QString m_lastFileName;
