@@ -82,10 +82,12 @@ public slots:
   void onPortManipulationRequested(QString portName);
   void setBlockCompilations( bool blockCompilations );
   void onFileNameChanged(QString fileName);
+  void enableShortCuts(bool enabled);
 
 private slots:
 
   void onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix);
+  void autosave();
 
 signals:
   void contentChanged();
@@ -95,6 +97,11 @@ protected:
   void closeEvent( QCloseEvent *event );
   bool saveGraph(bool saveAs);
   bool checkUnsavedChanged();
+
+  bool performSave(
+    FabricCore::DFGBinding &binding,
+    QString const &filePath
+    );
 
 private:
 
@@ -115,7 +122,7 @@ private:
   DFG::DFGLogWidget * m_logWidget;
   QUndoView *m_qUndoView;
   Viewports::TimeLineWidget * m_timeLine;
-  bool m_hasTimeLinePort;
+  int m_timelinePortIndex;
   QStatusBar *m_statusBar;
   QTimer m_fpsTimer;
   QLabel *m_fpsLabel;
@@ -132,8 +139,18 @@ private:
   QAction *m_quitAction;
   QAction *m_manipAction;
 
+  QAction * m_setStageVisibleAction;
+  QAction * m_setUsingStageAction;
+  QAction * m_resetCameraAction;
+  QAction * m_clearLogAction;
+  QAction * m_blockCompilationsAction;
+
   QString m_windowTitle;
   QString m_lastFileName;
 
   uint32_t m_lastSavedBindingVersion;
+
+  static const uint32_t s_autosaveIntervalSec = 30;
+  std::string m_autosaveFilename;
+  uint32_t m_lastAutosaveBindingVersion;
 };

@@ -10,6 +10,10 @@
 #include <FabricUI/Licensing/Licensing.h>
 #include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
 
+#include <FTL/CStrRef.h>
+#include <FTL/FS.h>
+#include <FTL/Path.h>
+
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
@@ -20,6 +24,8 @@
 #include <QtGui/QMessageBox>
 #include <QtGui/QUndoView>
 #include <QtGui/QVBoxLayout>
+
+#include <sstream>
 
 FabricServices::Persistence::RTValToJSONEncoder sRTValEncoder;
 FabricServices::Persistence::RTValFromJSONDecoder sRTValDecoder;
@@ -81,16 +87,55 @@ MainWindow::MainWindow(
   : m_dfguiCommandHandler( &m_qUndoStack )
   , m_settings( settings )
 {
+  std::stringstream autosaveBasename;
+  autosaveBasename << FTL_STR("autosave.");
+#if defined(FTL_PLATFORM_POSIX)
+  autosaveBasename << ::getpid();
+#elif defined(FTL_PLATFORM_WINDOWS)
+  autosaveBasename << ::GetProcessId( ::GetCurrentProcess() );
+#endif
+  autosaveBasename << FTL_STR(".canvas");
+
+  FTL::CStrRef fabricDir = FabricCore::GetFabricDir();
+  m_autosaveFilename = fabricDir;
+  FTL::PathAppendEntry( m_autosaveFilename, FTL_STR("autosave") );
+  FTL::FSMkDir( m_autosaveFilename.c_str() );
+  FTL::PathAppendEntry( m_autosaveFilename, autosaveBasename.str() );
+  printf(
+    "Will autosave to %s every %u seconds\n",
+    m_autosaveFilename.c_str(),
+    s_autosaveIntervalSec
+    );
+
+  QTimer *autosaveTimer = new QTimer( this );
+  connect(
+    autosaveTimer, SIGNAL(timeout()),
+    this, SLOT(autosave())
+    );
+  autosaveTimer->start( s_autosaveIntervalSec * 1000 );
+
   m_windowTitle = "Fabric Engine";
   onFileNameChanged("");
 
   DFG::DFGWidget::setSettings(m_settings);
 
+  m_newGraphAction = NULL;
+  m_loadGraphAction = NULL;
+  m_saveGraphAction = NULL;
+  m_saveGraphAsAction = NULL;
+  m_quitAction = NULL;
+  m_manipAction = NULL;
+  m_setStageVisibleAction = NULL;
+  m_setUsingStageAction = NULL;
+  m_resetCameraAction = NULL;
+  m_clearLogAction = NULL;
+  m_blockCompilationsAction = NULL;
+
   DockOptions dockOpt = dockOptions();
   dockOpt |= AllowNestedDocks;
   dockOpt ^= AllowTabbedDocks;
   setDockOptions(dockOpt);
-  m_hasTimeLinePort = false;
+  m_timelinePortIndex = -1;
   m_viewport = NULL;
   m_timeLine = NULL;
   m_dfgWidget = NULL;
@@ -156,6 +201,7 @@ MainWindow::MainWindow(
 
     FabricCore::DFGBinding binding = m_host.createBindingToNewGraph();
     m_lastSavedBindingVersion = binding.getVersion();
+    m_lastAutosaveBindingVersion = m_lastSavedBindingVersion;
 
     FabricCore::DFGExec graph = binding.getExec();
 
@@ -285,6 +331,11 @@ MainWindow::MainWindow(
       m_dfgValueEditor, SLOT(onNodeRemoved(FTL::CStrRef))
       );
 
+    QObject::connect(
+      m_dfgWidget->getTabSearchWidget(), SIGNAL(enabled(bool)),
+      this, SLOT(enableShortCuts(bool))
+      );
+
     QObject::connect(m_timeLine, SIGNAL(frameChanged(int)), this, SLOT(onFrameChanged(int)));
     // QObject::connect(m_manipAction, SIGNAL(triggered()), m_viewport, SLOT(toggleManipulation()));
 
@@ -379,6 +430,8 @@ MainWindow::~MainWindow()
 {
   if(m_manager)
     delete(m_manager);
+
+  FTL::FSMaybeDeleteFile( m_autosaveFilename );
 }
 
 void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
@@ -428,12 +481,38 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
   else if(hotkey == "rename node")
   {
-    std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
-    if(nodes.size() > 0)
+    FabricUI::DFG::DFGController *controller = m_dfgWidget->getUIController();
+    if (controller)
     {
-      DFG::DFGNodePropertiesDialog dialog( this, m_dfgWidget->getUIController(), nodes[0]->name().c_str(), m_dfgWidget->getConfig() );
-      if(!dialog.exec())
+      std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
+      if (nodes.size() != 1)
+      {
+        if (nodes.size() == 0)  controller->log("cannot open node editor: no node selected.");
+        else                    controller->log("cannot open node editor: more than one node selected.");
         return;
+      }
+
+      const char *nodeName = nodes[0]->name().c_str();
+      FabricCore::DFGNodeType nodeType = controller->getExec().getNodeType( nodeName );
+      if (   nodeType == FabricCore::DFGNodeType_Var
+          || nodeType == FabricCore::DFGNodeType_Get
+          || nodeType == FabricCore::DFGNodeType_Set)
+      {
+        controller->log("the node editor is not available for variable nodes.");
+        return;
+      }
+
+      DFG::DFGNodePropertiesDialog dialog(this, controller, nodeName, m_dfgWidget->getConfig());
+      if(dialog.exec())
+      {
+        controller->cmdSetNodeTitle       (nodeName, dialog.getTitle()  .toStdString().c_str());  // undoable.
+        controller->setNodeToolTip        (nodeName, dialog.getToolTip().toStdString().c_str());  // not undoable.
+        controller->setNodeDocUrl         (nodeName, dialog.getDocUrl() .toStdString().c_str());  // not undoable.
+
+        controller->setNodeBackgroundColor(nodeName, dialog.getNodeColor());                      // not undoable.
+        controller->setNodeHeaderColor    (nodeName, dialog.getHeaderColor());                    // not undoable.
+        controller->setNodeTextColor      (nodeName, dialog.getTextColor());                      // not undoable.
+      }
     }
   }
   else if(hotkey == "relax nodes")
@@ -457,25 +536,38 @@ void MainWindow::onFrameChanged(int frame)
     m_dfgWidget->getUIController()->logError(e.getDesc_cstr());
   }
 
-  if(!m_hasTimeLinePort)
+  if ( m_timelinePortIndex == -1 )
     return;
 
   try
   {
-    FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
-    FabricCore::RTVal val = binding.getArgValue("timeline");
-    if(!val.isValid())
-      binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
-    else
-    {
-      std::string typeName = val.getTypeName().getStringCString();
-      if(typeName == "SInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructSInt32(m_client, frame), false);
-      else if(typeName == "UInt32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructUInt32(m_client, frame), false);
-      else if(typeName == "Float32")
-        binding.setArgValue("timeline", FabricCore::RTVal::ConstructFloat32(m_client, frame), false);
-    }
+    FabricCore::DFGBinding binding =
+      m_dfgWidget->getUIController()->getBinding();
+    FabricCore::DFGExec exec = binding.getExec();
+    if ( exec.isExecPortResolvedType( m_timelinePortIndex, "SInt32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructSInt32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "UInt32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructUInt32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "Float32" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructFloat32( m_client, frame ),
+        false
+        );
+    else if ( exec.isExecPortResolvedType( m_timelinePortIndex, "Float64" ) )
+      binding.setArgValue(
+        m_timelinePortIndex,
+        FabricCore::RTVal::ConstructFloat64( m_client, frame ),
+        false
+        );
   }
   catch(FabricCore::Exception e)
   {
@@ -556,7 +648,7 @@ void MainWindow::onStructureChanged()
 {
   if(m_dfgWidget->getUIController()->isViewingRootGraph())
   {
-    m_hasTimeLinePort = false;
+    m_timelinePortIndex = -1;
     try
     {
       FabricCore::DFGExec graph =
@@ -564,15 +656,17 @@ void MainWindow::onStructureChanged()
       unsigned portCount = graph.getExecPortCount();
       for(unsigned i=0;i<portCount;i++)
       {
-        if(graph.getExecPortType(i) == FabricCore::DFGPortType_Out)
+        if ( graph.getExecPortType(i) == FabricCore::DFGPortType_Out )
           continue;
-        FTL::StrRef portName = graph.getExecPortName(i);
-        if(portName != "timeline")
+        FTL::CStrRef portName = graph.getExecPortName( i );
+        if ( portName != FTL_STR("timeline") )
           continue;
-        FTL::StrRef dataType = graph.getExecPortResolvedType(i);
-        if(dataType != "Integer" && dataType != "SInt32" && dataType != "UInt32" && dataType != "Float32" && dataType != "Float64")
+        if ( !graph.isExecPortResolvedType( i, "SInt32" )
+          && !graph.isExecPortResolvedType( i, "UInt32" )
+          && !graph.isExecPortResolvedType( i, "Float32" )
+          && !graph.isExecPortResolvedType( i, "Float64" ) )
           continue;
-        m_hasTimeLinePort = true;
+        m_timelinePortIndex = int( i );
         break;
       }
     }
@@ -700,7 +794,7 @@ void MainWindow::onNewGraph()
 
     QCoreApplication::processEvents();
 
-    m_hasTimeLinePort = false;
+    m_timelinePortIndex = -1;
 
     binding = m_host.createBindingToNewGraph();
     m_lastSavedBindingVersion = binding.getVersion();
@@ -745,7 +839,7 @@ void MainWindow::onLoadGraph()
 void MainWindow::loadGraph( QString const &filePath )
 {
   m_timeLine->pause();
-  m_hasTimeLinePort = false;
+  m_timelinePortIndex = -1;
 
   try
   {
@@ -870,36 +964,11 @@ void MainWindow::onSaveGraphAs()
   saveGraph(true);
 }
 
-bool MainWindow::saveGraph(bool saveAs)
+bool MainWindow::performSave(
+  FabricCore::DFGBinding &binding,
+  QString const &filePath
+  )
 {
-  m_timeLine->pause();
-
-  QString filePath = m_lastFileName;
-  if(filePath.length() == 0 || saveAs)
-  {
-    QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-    if(m_lastFileName.length() > 0)
-    {
-      filePath = m_lastFileName;
-      if(filePath.toLower().endsWith(".dfg.json"))
-        filePath = filePath.left(filePath.length() - 9);
-    }
-    else
-      filePath = lastPresetFolder;
-
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
-    if(filePath.length() == 0)
-      return false;
-    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
-      filePath = filePath.left(filePath.length() - 9);
-  }
-
-  QDir dir(filePath);
-  dir.cdUp();
-  m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
-
-  FabricCore::DFGBinding &binding =
-    m_dfgWidget->getUIController()->getBinding();
   FabricCore::DFGExec graph = binding.getExec();
 
   QString num;
@@ -941,14 +1010,50 @@ bool MainWindow::saveGraph(bool saveAs)
     {
       fwrite(jsonData, jsonSize, 1, file);
       fclose(file);
-
-      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
     }
   }
   catch(FabricCore::Exception e)
   {
     printf("Exception: %s\n", e.getDesc_cstr());
+    return false;
   }
+
+  return true;
+}
+
+bool MainWindow::saveGraph(bool saveAs)
+{
+  m_timeLine->pause();
+
+  QString filePath = m_lastFileName;
+  if(filePath.length() == 0 || saveAs)
+  {
+    QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
+    if(m_lastFileName.length() > 0)
+    {
+      filePath = m_lastFileName;
+      if(filePath.toLower().endsWith(".dfg.json"))
+        filePath = filePath.left(filePath.length() - 9);
+    }
+    else
+      filePath = lastPresetFolder;
+
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
+    if(filePath.length() == 0)
+      return false;
+    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
+      filePath = filePath.left(filePath.length() - 9);
+  }
+
+  QDir dir(filePath);
+  dir.cdUp();
+  m_settings->setValue( "mainWindow/lastPresetFolder", dir.path() );
+
+  FabricCore::DFGBinding &binding =
+    m_dfgWidget->getUIController()->getBinding();
+
+  if ( performSave( binding, filePath ) )
+    m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, filePath.toUtf8().constData()));
 
   m_lastFileName = filePath;
 
@@ -974,6 +1079,32 @@ void MainWindow::onFileNameChanged(QString fileName)
     setWindowTitle( m_windowTitle );
   else
     setWindowTitle( m_windowTitle + " - " + fileName );
+}
+
+void MainWindow::enableShortCuts(bool enabled)
+{
+  if(m_newGraphAction)
+    m_newGraphAction->blockSignals(enabled);
+  if(m_loadGraphAction)
+    m_loadGraphAction->blockSignals(enabled);
+  if(m_saveGraphAction)
+    m_saveGraphAction->blockSignals(enabled);
+  if(m_saveGraphAsAction)
+    m_saveGraphAsAction->blockSignals(enabled);
+  if(m_quitAction)
+    m_quitAction->blockSignals(enabled);
+  if(m_manipAction)
+    m_manipAction->blockSignals(enabled);
+  if(m_setStageVisibleAction)
+    m_setStageVisibleAction->blockSignals(enabled);
+  if(m_setUsingStageAction)
+    m_setUsingStageAction->blockSignals(enabled);
+  if(m_resetCameraAction)
+    m_resetCameraAction->blockSignals(enabled);
+  if(m_clearLogAction)
+    m_clearLogAction->blockSignals(enabled);
+  if(m_blockCompilationsAction)
+    m_blockCompilationsAction->blockSignals(enabled);
 }
 
 void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix)
@@ -1021,61 +1152,87 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
     {
       menu->addSeparator();
 
-      m_manipAction = menu->addAction("Toggle Manipulation");
+      m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
       m_manipAction->setShortcut(Qt::CTRL + Qt::Key_Q);
+      m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+      m_viewport->addAction(m_manipAction);
+      menu->addAction(m_manipAction);
     }
   }
   else if(name == "View")
   {
     if(prefix)
     {
-      QAction *setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-      setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
-      setStageVisibleAction->setCheckable( true );
-      setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+      m_setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
+      m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
+      m_setStageVisibleAction->setCheckable( true );
+      m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
       QObject::connect(
-        setStageVisibleAction, SIGNAL(toggled(bool)),
+        m_setStageVisibleAction, SIGNAL(toggled(bool)),
         m_viewport, SLOT(setStageVisible(bool))
         );
 
-      QAction *setUsingStageAction = new QAction( "Use &Stage", 0 );
-      setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
-      setUsingStageAction->setCheckable( true );
-      setUsingStageAction->setChecked( m_viewport->isUsingStage() );
+      m_setUsingStageAction = new QAction( "Use &Stage", 0 );
+      m_setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+      m_setUsingStageAction->setCheckable( true );
+      m_setUsingStageAction->setChecked( m_viewport->isUsingStage() );
       QObject::connect(
-        setUsingStageAction, SIGNAL(toggled(bool)),
+        m_setUsingStageAction, SIGNAL(toggled(bool)),
         m_viewport, SLOT(setUsingStage(bool))
         );
 
-      QAction *resetCameraAction = new QAction( "&Reset Camera", 0 );
-      resetCameraAction->setShortcut(Qt::Key_R);
+      m_resetCameraAction = new QAction( "&Reset Camera", m_viewport );
+      m_resetCameraAction->setShortcut(Qt::Key_R);
+      m_resetCameraAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
       QObject::connect(
-        resetCameraAction, SIGNAL(triggered()),
+        m_resetCameraAction, SIGNAL(triggered()),
         m_viewport, SLOT(resetCamera())
         );
+      m_viewport->addAction(m_resetCameraAction);
 
-      QAction *clearLogAction = new QAction( "&Clear Log Messages", 0 );
+      m_clearLogAction = new QAction( "&Clear Log Messages", 0 );
       QObject::connect(
-        clearLogAction, SIGNAL(triggered()),
+        m_clearLogAction, SIGNAL(triggered()),
         m_logWidget, SLOT(clear())
         );
 
-      QAction *blockCompilationsAction = new QAction( "&Block compilations", 0 );
-      blockCompilationsAction->setCheckable( true );
-      blockCompilationsAction->setChecked( false );
+      m_blockCompilationsAction = new QAction( "&Block compilations", 0 );
+      m_blockCompilationsAction->setCheckable( true );
+      m_blockCompilationsAction->setChecked( false );
       QObject::connect(
-        blockCompilationsAction, SIGNAL(toggled(bool)),
+        m_blockCompilationsAction, SIGNAL(toggled(bool)),
         this, SLOT(setBlockCompilations(bool))
         );
 
-      menu->addAction( setStageVisibleAction );
-      menu->addAction( setUsingStageAction );
+      menu->addAction( m_setStageVisibleAction );
+      menu->addAction( m_setUsingStageAction );
       menu->addSeparator();
-      menu->addAction( resetCameraAction );
+      menu->addAction( m_resetCameraAction );
       menu->addSeparator();
-      menu->addAction( clearLogAction );
+      menu->addAction( m_clearLogAction );
       menu->addSeparator();
-      menu->addAction( blockCompilationsAction );
+      menu->addAction( m_blockCompilationsAction );
+    }
+  }
+}
+
+void MainWindow::autosave()
+{
+  FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
+  if ( !!binding )
+  {
+    uint32_t bindingVersion = binding.getVersion();
+    if ( bindingVersion != m_lastAutosaveBindingVersion )
+    {
+      std::string tmpAutosaveFilename = m_autosaveFilename;
+      tmpAutosaveFilename += FTL_STR(".tmp");
+
+      if ( performSave( binding, tmpAutosaveFilename.c_str() ) )
+      {
+        FTL::FSMaybeMoveFile( tmpAutosaveFilename, m_autosaveFilename );
+
+        m_lastAutosaveBindingVersion = bindingVersion;
+      }
     }
   }
 }
