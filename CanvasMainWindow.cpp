@@ -614,7 +614,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
-    graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
+    graph->defineHotkey(Qt::Key_Q, Qt::ControlModifier, "toggle manipulation");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
@@ -1022,7 +1022,7 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       menu->addSeparator();
 
       m_manipAction = menu->addAction("Toggle Manipulation");
-      m_manipAction->setShortcut(Qt::Key_Q);
+      m_manipAction->setShortcut(Qt::CTRL + Qt::Key_Q);
     }
   }
   else if(name == "View")
