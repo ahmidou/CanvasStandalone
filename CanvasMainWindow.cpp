@@ -724,7 +724,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
-    graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
+    graph->defineHotkey(Qt::Key_Q, Qt::ControlModifier, "toggle manipulation");
     graph->defineHotkey(Qt::Key_0, Qt::ControlModifier, "reset zoom");
     graph->defineHotkey(Qt::Key_1, Qt::NoModifier, "collapse nodes level 1");
     graph->defineHotkey(Qt::Key_2, Qt::NoModifier, "collapse nodes level 2");
@@ -1172,7 +1172,7 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       menu->addSeparator();
 
       m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
-      m_manipAction->setShortcut(Qt::Key_Q);
+      m_manipAction->setShortcut(Qt::CTRL + Qt::Key_Q);
       m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
       m_viewport->addAction(m_manipAction);
       menu->addAction(m_manipAction);
