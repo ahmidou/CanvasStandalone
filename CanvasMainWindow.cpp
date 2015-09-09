@@ -251,9 +251,9 @@ MainWindow::MainWindow(
     timeLineDock->setFeatures( dockFeatures );
     timeLineDock->setWidget(m_timeLine);
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
-
+ 
     // preset library
-    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, true, true );
+    m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, false, true );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
     treeDock->setFeatures( dockFeatures );
