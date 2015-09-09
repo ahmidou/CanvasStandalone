@@ -366,7 +366,7 @@ MainWindow::MainWindow(
     toggleAction->setShortcut( Qt::CTRL + Qt::Key_6 );
     windowMenu->addAction( toggleAction );
     toggleAction = timeLineDock->toggleViewAction();
-    toggleAction->setShortcut( Qt::CTRL + Qt::Key_0 );
+    toggleAction->setShortcut( Qt::CTRL + Qt::Key_9 );
     windowMenu->addAction( toggleAction );
     windowMenu->addSeparator();
     toggleAction = undoDockWidget->toggleViewAction();
@@ -522,6 +522,10 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   else if(hotkey == "toggle manipulation")
   {
     m_viewport->toggleManipulation();
+  }
+  else if(hotkey == "reset zoom")
+  {
+    m_dfgWidget->onResetZoom();
   }
 }
 
@@ -709,6 +713,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
     graph->defineHotkey(Qt::Key_Q, Qt::ControlModifier, "toggle manipulation");
+    graph->defineHotkey(Qt::Key_0, Qt::ControlModifier, "reset zoom");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
