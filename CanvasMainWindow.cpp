@@ -527,6 +527,18 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->onResetZoom();
   }
+  else if(hotkey == "collapse nodes level 1")
+  {
+    m_dfgWidget->getUIController()->collapseSelectedNodes(2);
+  }
+  else if(hotkey == "collapse nodes level 2")
+  {
+    m_dfgWidget->getUIController()->collapseSelectedNodes(1);
+  }
+  else if(hotkey == "collapse nodes level 3")
+  {
+    m_dfgWidget->getUIController()->collapseSelectedNodes(0);
+  }
 }
 
 void MainWindow::onFrameChanged(int frame)
@@ -714,6 +726,9 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
     graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
     graph->defineHotkey(Qt::Key_0, Qt::ControlModifier, "reset zoom");
+    graph->defineHotkey(Qt::Key_1, Qt::NoModifier, "collapse nodes level 1");
+    graph->defineHotkey(Qt::Key_2, Qt::NoModifier, "collapse nodes level 2");
+    graph->defineHotkey(Qt::Key_3, Qt::NoModifier, "collapse nodes level 3");
 
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
@@ -819,7 +834,6 @@ void MainWindow::onNewGraph()
   {
     printf("Exception: %s\n", e.getDesc_cstr());
   }
-
 }
 
 void MainWindow::onLoadGraph()
