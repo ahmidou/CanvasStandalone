@@ -1223,6 +1223,11 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
 
 void MainWindow::autosave()
 {
+  // [andrew 20150909] can happen if this triggers while the licensing
+  // dialogs are up
+  if ( !m_dfgWidget || !m_dfgWidget->getUIController() )
+    return;
+
   FabricCore::DFGBinding binding = m_dfgWidget->getUIController()->getBinding();
   if ( !!binding )
   {

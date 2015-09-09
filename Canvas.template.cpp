@@ -6,6 +6,7 @@
 #include <FabricCore.h>
 #include <FabricUI/Style/FabricStyle.h>
 #include <FTL/CStrRef.h>
+#include <FTL/Path.h>
 
 int main(int argc, char *argv[])
 {
@@ -14,6 +15,14 @@ int main(int argc, char *argv[])
   app.setApplicationName( "Fabric Canvas Standalone" );
   app.setApplicationVersion( "{{FABRIC_VERSION_MAJ}}.{{FABRIC_VERSION_MIN}}.{{FABRIC_VERSION_REV}}{{FABRIC_VERSION_SUFFIX}}" );
   app.setStyle(new FabricUI::Style::FabricStyle());
+
+  char *fabricDir = getenv( "FABRIC_DIR" );
+  if ( fabricDir )
+  {
+    std::string logoPath = FTL::PathJoin( fabricDir, "Resources" );
+    FTL::PathAppendEntry( logoPath, "fe_logo.png" );
+    app.setWindowIcon( QIcon( logoPath.c_str() ) );
+  }
 
   QSettings settings;
   try
