@@ -253,6 +253,7 @@ MainWindow::MainWindow(
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
  
     // preset library
+    // Because of a lack of performances, we don't expose the search tool of the PresetTreeWidget
     m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, false, true );
     QDockWidget *treeDock = new QDockWidget("Explorer", this);
     treeDock->setObjectName( "Explorer" );
