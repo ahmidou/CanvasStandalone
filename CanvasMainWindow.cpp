@@ -2,7 +2,6 @@
 // Copyright 2010-2015 Fabric Software Inc. All rights reserved.
 //
 
-#include <iostream>
 #include "CanvasMainWindow.h"
 
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
