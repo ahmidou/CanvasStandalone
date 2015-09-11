@@ -521,7 +521,9 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
   else if(hotkey == "toggle manipulation")
   {
-    m_viewport->toggleManipulation();
+    // Make sure we use the Action path, so menu's "checked" state is updated
+    if( m_manipAction )
+      m_manipAction->trigger();
   }
   else if(hotkey == "reset zoom")
   {
@@ -1174,8 +1176,14 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
       m_manipAction->setShortcut(Qt::Key_Q);
       m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
-      m_viewport->addAction(m_manipAction);
-      menu->addAction(m_manipAction);
+      m_manipAction->setCheckable( true );
+      m_manipAction->setChecked( m_viewport->isManipulationActive() );
+      QObject::connect(
+        m_manipAction, SIGNAL(triggered()),
+        m_viewport, SLOT(toggleManipulation())
+        );
+      m_viewport->addAction( m_manipAction );
+      menu->addAction( m_manipAction );
     }
   }
   else if(name == "View")
