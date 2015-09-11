@@ -2,6 +2,8 @@
 // Copyright 2010-2015 Fabric Software Inc. All rights reserved.
 //
 
+#include <iostream>
+
 #include "CanvasMainWindow.h"
 
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
@@ -461,6 +463,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   }
   else if(hotkey == "copy")
   {
+    std::cerr << "_dfgWidget->getUIController()->copy()" << std::endl;
     m_dfgWidget->getUIController()->copy();
   }
   else if(hotkey == "paste")
