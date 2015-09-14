@@ -251,6 +251,7 @@ MainWindow::MainWindow(
     timeLineDock->setWidget(m_timeLine);
     addDockWidget(Qt::BottomDockWidgetArea, timeLineDock, Qt::Vertical);
  
+    // [Julien] FE-5252
     // preset library
     // Because of a lack of performances, we don't expose the search tool of the PresetTreeWidget
     m_treeWidget = new DFG::PresetTreeWidget( m_dfgWidget->getDFGController(), config, true, false, true );
