@@ -463,6 +463,10 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->getUIController()->copy();
   }
+  else if(hotkey == "cut")
+  {
+    m_dfgWidget->getUIController()->cmdCut();
+  }
   else if(hotkey == "paste")
   {
     m_dfgWidget->getUIController()->cmdPaste();
@@ -713,14 +717,15 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     GraphView::Graph * graph = m_dfgWidget->getUIGraph();
     graph->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
     graph->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
-    graph->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
-    graph->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
+    //graph->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
+    //graph->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
     graph->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
     graph->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
     graph->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
     graph->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
     graph->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
     graph->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
+    graph->defineHotkey(Qt::Key_X, Qt::ControlModifier, "cut");
     graph->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
     graph->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
@@ -1172,7 +1177,6 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
     else
     {
       menu->addSeparator();
-
       m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
       m_manipAction->setShortcut(Qt::Key_Q);
       m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
