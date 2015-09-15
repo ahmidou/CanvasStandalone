@@ -75,6 +75,23 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
         return true;
     }
   }
+  else if (event->type() == QEvent::KeyRelease)
+  {
+    QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
+
+    // forward this to the hotkeyReleased functionality...
+    if(keyEvent->key() != Qt::Key_Tab)
+    {
+      //For now the viewport isn't listening to key releases
+      //m_window->m_viewport->onKeyReleased(keyEvent);
+      //if(keyEvent->isAccepted())
+      //  return true;
+
+      m_window->m_dfgWidget->onKeyReleased(keyEvent);
+      if(keyEvent->isAccepted())
+        return true;
+    }
+  }
 
   return QObject::eventFilter(object, event);
 };
