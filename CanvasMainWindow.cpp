@@ -835,7 +835,7 @@ void MainWindow::onLoadGraph()
     return;
 
   QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-  QString filePath = QFileDialog::getOpenFileName(this, "Load preset", lastPresetFolder, "DFG Presets (*.dfg.json)");
+  QString filePath = QFileDialog::getOpenFileName(this, "Load preset", lastPresetFolder, "DFG Presets (*.canvas)");
   if ( filePath.length() )
   {
     QDir dir(filePath);
@@ -1042,17 +1042,17 @@ bool MainWindow::saveGraph(bool saveAs)
     if(m_lastFileName.length() > 0)
     {
       filePath = m_lastFileName;
-      if(filePath.toLower().endsWith(".dfg.json"))
+      if(filePath.toLower().endsWith(".canvas"))
         filePath = filePath.left(filePath.length() - 9);
     }
     else
       filePath = lastPresetFolder;
 
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.dfg.json)");
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.canvas)");
     if(filePath.length() == 0)
       return false;
-    if(filePath.toLower().endsWith(".dfg.json.dfg.json"))
-      filePath = filePath.left(filePath.length() - 9);
+    if(filePath.toLower().endsWith(".canvas.canvas"))
+      filePath = filePath.left(filePath.length() - 7);
   }
 
   QDir dir(filePath);
