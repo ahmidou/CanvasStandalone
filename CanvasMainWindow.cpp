@@ -445,11 +445,11 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     onDirty();
   }
-  else if(hotkey == "frameSelected")
+  else if(hotkey == "frame selected")
   {
     m_dfgWidget->getUIController()->frameSelectedNodes();
   }
-  else if(hotkey == "frameAll")
+  else if(hotkey == "frame all")
   {
     m_dfgWidget->getUIController()->frameAllNodes();
   }
@@ -483,41 +483,9 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     saveGraph(false);
   }
-  else if(hotkey == "rename node")
+  else if(hotkey == "edit properties")
   {
-    FabricUI::DFG::DFGController *controller = m_dfgWidget->getUIController();
-    if (controller)
-    {
-      std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
-      if (nodes.size() != 1)
-      {
-        if (nodes.size() == 0)  controller->log("cannot open node editor: no node selected.");
-        else                    controller->log("cannot open node editor: more than one node selected.");
-        return;
-      }
-
-      const char *nodeName = nodes[0]->name().c_str();
-      FabricCore::DFGNodeType nodeType = controller->getExec().getNodeType( nodeName );
-      if (   nodeType == FabricCore::DFGNodeType_Var
-          || nodeType == FabricCore::DFGNodeType_Get
-          || nodeType == FabricCore::DFGNodeType_Set)
-      {
-        controller->log("the node editor is not available for variable nodes.");
-        return;
-      }
-
-      DFG::DFGNodePropertiesDialog dialog(this, controller, nodeName, m_dfgWidget->getConfig());
-      if(dialog.exec())
-      {
-        controller->cmdSetNodeTitle       (nodeName, dialog.getTitle()  .toStdString().c_str());  // undoable.
-        controller->setNodeToolTip        (nodeName, dialog.getToolTip().toStdString().c_str());  // not undoable.
-        controller->setNodeDocUrl         (nodeName, dialog.getDocUrl() .toStdString().c_str());  // not undoable.
-
-        controller->setNodeBackgroundColor(nodeName, dialog.getNodeColor());                      // not undoable.
-        controller->setNodeHeaderColor    (nodeName, dialog.getHeaderColor());                    // not undoable.
-        controller->setNodeTextColor      (nodeName, dialog.getTextColor());                      // not undoable.
-      }
-    }
+    m_dfgWidget->editPropertiesForCurrentSelection();
   }
   else if(hotkey == "relax nodes")
   {
@@ -717,19 +685,17 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     GraphView::Graph * graph = m_dfgWidget->getUIGraph();
     graph->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
     graph->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
-    //graph->defineHotkey(Qt::Key_Z, Qt::ControlModifier, "undo");
-    //graph->defineHotkey(Qt::Key_Y, Qt::ControlModifier, "redo");
     graph->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
-    graph->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
-    graph->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
-    graph->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
+    graph->defineHotkey(Qt::Key_F, Qt::NoModifier, "frame selected");
+    graph->defineHotkey(Qt::Key_A, Qt::NoModifier, "frame all");
+    graph->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tab search");
     graph->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
     graph->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
     graph->defineHotkey(Qt::Key_X, Qt::ControlModifier, "cut");
     graph->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
     graph->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
     graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
-    graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "rename node");
+    graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "edit properties");
     graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
     graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
     graph->defineHotkey(Qt::Key_0, Qt::ControlModifier, "reset zoom");
