@@ -476,7 +476,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->getUIController()->frameAllNodes();
   }
-  else if(hotkey == "tabSearch")
+  else if(hotkey == "tab search")
   {
     QPoint pos = m_dfgWidget->getGraphViewWidget()->lastEventPos();
     pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
