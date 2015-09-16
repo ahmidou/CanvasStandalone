@@ -8,6 +8,7 @@
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
 #include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
+#include <FabricUI/DFG/DFGHotkeys.h>
 
 #include <FTL/CStrRef.h>
 #include <FTL/FS.h>
@@ -459,80 +460,80 @@ MainWindow::~MainWindow()
 
 void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
 {
-  if(hotkey == "delete" || hotkey == "delete2")
+  if(hotkey == DFG_DELETE || hotkey == DFG_DELETE_2)
   {
     std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
     m_dfgWidget->getUIController()->gvcDoRemoveNodes(nodes);
   }
-  else if(hotkey == "execute")
+  else if(hotkey == DFG_EXECUTE)
   {
     onDirty();
   }
-  else if(hotkey == "frame selected")
+  else if(hotkey == DFG_FRAME_SELECTED)
   {
     m_dfgWidget->getUIController()->frameSelectedNodes();
   }
-  else if(hotkey == "frame all")
+  else if(hotkey == DFG_FRAME_ALL)
   {
     m_dfgWidget->getUIController()->frameAllNodes();
   }
-  else if(hotkey == "tab search")
+  else if(hotkey == DFG_TAB_SEARCH)
   {
     QPoint pos = m_dfgWidget->getGraphViewWidget()->lastEventPos();
     pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
     m_dfgWidget->getTabSearchWidget()->showForSearch(pos);
   }
-  else if(hotkey == "copy")
+  else if(hotkey == DFG_COPY)
   {
     m_dfgWidget->getUIController()->copy();
   }
-  else if(hotkey == "cut")
+  else if(hotkey == DFG_CUT)
   {
     m_dfgWidget->getUIController()->cmdCut();
   }
-  else if(hotkey == "paste")
+  else if(hotkey == DFG_PASTE)
   {
     m_dfgWidget->getUIController()->cmdPaste();
   }
-  else if(hotkey == "new scene")
+  else if(hotkey == DFG_NEW_SCENE)
   {
     onNewGraph();
   }
-  else if(hotkey == "open scene")
+  else if(hotkey == DFG_OPEN_SCENE)
   {
     onLoadGraph();
   }
-  else if(hotkey == "save scene")
+  else if(hotkey == DFG_SAVE_SCENE)
   {
     saveGraph(false);
   }
-  else if(hotkey == "edit properties")
+  else if(hotkey == DFG_EDIT_PROPERTIES)
   {
     m_dfgWidget->editPropertiesForCurrentSelection();
   }
-  else if(hotkey == "relax nodes")
+  else if(hotkey == DFG_RELAX_NODES)
   {
     m_dfgWidget->getUIController()->relaxNodes();
   }
-  else if(hotkey == "toggle manipulation")
+  else if(hotkey == DFG_TOGGLE_MANIPULATION)
   {
     // Make sure we use the Action path, so menu's "checked" state is updated
     if( m_manipAction )
       m_manipAction->trigger();
   }
-  else if(hotkey == "reset zoom")
+  else if(hotkey == DFG_RESET_ZOOM)
   {
     m_dfgWidget->onResetZoom();
   }
-  else if(hotkey == "collapse nodes level 1")
+  else if(hotkey == DFG_COLLAPSE_LEVEL_1)
   {
     m_dfgWidget->getUIController()->collapseSelectedNodes(2);
   }
-  else if(hotkey == "collapse nodes level 2")
+  else if(hotkey == DFG_COLLAPSE_LEVEL_2)
   {
     m_dfgWidget->getUIController()->collapseSelectedNodes(1);
   }
-  else if(hotkey == "collapse nodes level 3")
+  else if(hotkey == DFG_COLLAPSE_LEVEL_3)
   {
     m_dfgWidget->getUIController()->collapseSelectedNodes(0);
   }
@@ -706,36 +707,34 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
   if(graph != m_setGraph)
   {
     GraphView::Graph * graph = m_dfgWidget->getUIGraph();
-    graph->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
-    graph->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
-    graph->defineHotkey(Qt::Key_F5, Qt::NoModifier, "execute");
-    graph->defineHotkey(Qt::Key_F, Qt::NoModifier, "frame selected");
-    graph->defineHotkey(Qt::Key_A, Qt::NoModifier, "frame all");
-    graph->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tab search");
-    graph->defineHotkey(Qt::Key_C, Qt::ControlModifier, "copy");
-    graph->defineHotkey(Qt::Key_V, Qt::ControlModifier, "paste");
-    graph->defineHotkey(Qt::Key_X, Qt::ControlModifier, "cut");
-    graph->defineHotkey(Qt::Key_N, Qt::ControlModifier, "new scene");
-    graph->defineHotkey(Qt::Key_O, Qt::ControlModifier, "open scene");
-    graph->defineHotkey(Qt::Key_S, Qt::ControlModifier, "save scene");
-    graph->defineHotkey(Qt::Key_F2, Qt::NoModifier, "edit properties");
-    graph->defineHotkey(Qt::Key_R, Qt::ControlModifier, "relax nodes");
-    graph->defineHotkey(Qt::Key_Q, Qt::NoModifier, "toggle manipulation");
-    graph->defineHotkey(Qt::Key_0, Qt::ControlModifier, "reset zoom");
-    graph->defineHotkey(Qt::Key_1, Qt::NoModifier, "collapse nodes level 1");
-    graph->defineHotkey(Qt::Key_2, Qt::NoModifier, "collapse nodes level 2");
-    graph->defineHotkey(Qt::Key_3, Qt::NoModifier, "collapse nodes level 3");
-
+    graph->defineHotkey(Qt::Key_Delete,   Qt::NoModifier,     DFG_DELETE);
+    graph->defineHotkey(Qt::Key_Backspace,Qt::NoModifier,     DFG_DELETE_2);
+    graph->defineHotkey(Qt::Key_F5,       Qt::NoModifier,     DFG_EXECUTE);
+    graph->defineHotkey(Qt::Key_F,        Qt::NoModifier,     DFG_FRAME_SELECTED);
+    graph->defineHotkey(Qt::Key_A,        Qt::NoModifier,     DFG_FRAME_ALL);
+    graph->defineHotkey(Qt::Key_Tab,      Qt::NoModifier,     DFG_TAB_SEARCH);
+    graph->defineHotkey(Qt::Key_C,        Qt::ControlModifier,DFG_COPY);
+    graph->defineHotkey(Qt::Key_V,        Qt::ControlModifier,DFG_PASTE);
+    graph->defineHotkey(Qt::Key_X,        Qt::ControlModifier,DFG_CUT);
+    graph->defineHotkey(Qt::Key_N,        Qt::ControlModifier,DFG_NEW_SCENE);
+    graph->defineHotkey(Qt::Key_O,        Qt::ControlModifier,DFG_OPEN_SCENE);
+    graph->defineHotkey(Qt::Key_S,        Qt::ControlModifier,DFG_SAVE_SCENE);
+    graph->defineHotkey(Qt::Key_F2,       Qt::NoModifier,     DFG_EDIT_PROPERTIES);
+    graph->defineHotkey(Qt::Key_R,        Qt::ControlModifier,DFG_RELAX_NODES);
+    graph->defineHotkey(Qt::Key_Q,        Qt::NoModifier,     DFG_TOGGLE_MANIPULATION);
+    graph->defineHotkey(Qt::Key_0,        Qt::ControlModifier,DFG_RESET_ZOOM);
+    graph->defineHotkey(Qt::Key_1,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_1);
+    graph->defineHotkey(Qt::Key_2,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_2);
+    graph->defineHotkey(Qt::Key_3,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_3);
+          
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
     QObject::connect(graph, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
       this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*)));
     QObject::connect(graph, SIGNAL(nodeEditRequested(FabricUI::GraphView::Node*)),
       this, SLOT(onNodeEditRequested(FabricUI::GraphView::Node*)));
-    QObject::connect(
-      graph, SIGNAL(sidePanelInspectRequested()),
-      this, SLOT(onSidePanelInspectRequested())
-      );
+    QObject::connect(graph, SIGNAL(sidePanelInspectRequested()),
+      this, SLOT(onSidePanelInspectRequested()) );
 
     m_setGraph = graph;
   }
