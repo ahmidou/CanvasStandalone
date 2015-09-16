@@ -839,7 +839,7 @@ void MainWindow::onLoadGraph()
     return;
 
   QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-  QString filePath = QFileDialog::getOpenFileName(this, "Load preset", lastPresetFolder, "DFG Presets (*.canvas)");
+  QString filePath = QFileDialog::getOpenFileName(this, "Load graph", lastPresetFolder, "*.canvas");
   if ( filePath.length() )
   {
     QDir dir(filePath);
@@ -1052,7 +1052,7 @@ bool MainWindow::saveGraph(bool saveAs)
     else
       filePath = lastPresetFolder;
 
-    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.canvas)");
+    filePath = QFileDialog::getSaveFileName(this, "Save graph", filePath, "*.canvas");
     if(filePath.length() == 0)
       return false;
     if(filePath.toLower().endsWith(".canvas.canvas"))
