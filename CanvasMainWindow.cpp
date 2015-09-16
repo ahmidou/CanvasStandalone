@@ -7,7 +7,6 @@
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
-#include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
 
 #include <FTL/CStrRef.h>
 #include <FTL/FS.h>
