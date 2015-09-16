@@ -1047,7 +1047,7 @@ bool MainWindow::saveGraph(bool saveAs)
     {
       filePath = m_lastFileName;
       if(filePath.toLower().endsWith(".canvas"))
-        filePath = filePath.left(filePath.length() - 9);
+        filePath = filePath.left(filePath.length() - 7);
     }
     else
       filePath = lastPresetFolder;
