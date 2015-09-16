@@ -57,9 +57,14 @@ MainWindowEventFilter::MainWindowEventFilter(MainWindow * window)
   m_window = window;
 }
 
-bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
+bool MainWindowEventFilter::eventFilter(
+  QObject* object,
+  QEvent* event
+  )
 {
-  if (event->type() == QEvent::KeyPress)
+  QEvent::Type eventType = event->type();
+
+  if (eventType == QEvent::KeyPress)
   {
     QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
 
@@ -75,7 +80,7 @@ bool MainWindowEventFilter::eventFilter(QObject* object,QEvent* event)
         return true;
     }
   }
-  else if (event->type() == QEvent::KeyRelease)
+  else if (eventType == QEvent::KeyRelease)
   {
     QKeyEvent *keyEvent = dynamic_cast<QKeyEvent *>(event);
 
@@ -471,7 +476,7 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     m_dfgWidget->getUIController()->frameAllNodes();
   }
-  else if(hotkey == "tabSearch")
+  else if(hotkey == "tab search")
   {
     QPoint pos = m_dfgWidget->getGraphViewWidget()->lastEventPos();
     pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
