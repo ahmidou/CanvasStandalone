@@ -7,7 +7,11 @@
 #include <FabricServices/Persistence/RTValToJSONEncoder.hpp>
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
+<<<<<<< HEAD
+=======
+#include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
 #include <FabricUI/DFG/DFGHotkeys.h>
+>>>>>>> origin/pablo
 
 #include <FTL/CStrRef.h>
 #include <FTL/FS.h>
@@ -838,7 +842,7 @@ void MainWindow::onLoadGraph()
     return;
 
   QString lastPresetFolder = m_settings->value("mainWindow/lastPresetFolder").toString();
-  QString filePath = QFileDialog::getOpenFileName(this, "Load graph", lastPresetFolder, "*.canvas");
+  QString filePath = QFileDialog::getOpenFileName(this, "Load preset", lastPresetFolder, "DFG Presets (*.canvas)");
   if ( filePath.length() )
   {
     QDir dir(filePath);
@@ -1051,7 +1055,7 @@ bool MainWindow::saveGraph(bool saveAs)
     else
       filePath = lastPresetFolder;
 
-    filePath = QFileDialog::getSaveFileName(this, "Save graph", filePath, "*.canvas");
+    filePath = QFileDialog::getSaveFileName(this, "Save preset", filePath, "DFG Presets (*.canvas)");
     if(filePath.length() == 0)
       return false;
     if(filePath.toLower().endsWith(".canvas.canvas"))
