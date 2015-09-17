@@ -8,7 +8,7 @@
 #include <FabricServices/Persistence/RTValFromJSONDecoder.hpp>
 #include <FabricUI/Licensing/Licensing.h>
 #include <FabricUI/DFG/Dialogs/DFGNodePropertiesDialog.h>
-#include <FabricUI/DFG/DFGHotkeys.h>
+#include <FabricUI/DFG/DFGActions.h>
 
 #include <FTL/CStrRef.h>
 #include <FTL/FS.h>
@@ -458,42 +458,11 @@ MainWindow::~MainWindow()
   FTL::FSMaybeDeleteFile( m_autosaveFilename );
 }
 
-void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
+void MainWindow::onHotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
 {
-  if(hotkey == DFG_DELETE || hotkey == DFG_DELETE_2)
-  {
-    std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
-    m_dfgWidget->getUIController()->gvcDoRemoveNodes(nodes);
-  }
-  else if(hotkey == DFG_EXECUTE)
+  if(hotkey == DFG_EXECUTE)
   {
     onDirty();
-  }
-  else if(hotkey == DFG_FRAME_SELECTED)
-  {
-    m_dfgWidget->getUIController()->frameSelectedNodes();
-  }
-  else if(hotkey == DFG_FRAME_ALL)
-  {
-    m_dfgWidget->getUIController()->frameAllNodes();
-  }
-  else if(hotkey == DFG_TAB_SEARCH)
-  {
-    QPoint pos = m_dfgWidget->getGraphViewWidget()->lastEventPos();
-    pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
-    m_dfgWidget->getTabSearchWidget()->showForSearch(pos);
-  }
-  else if(hotkey == DFG_COPY)
-  {
-    m_dfgWidget->getUIController()->copy();
-  }
-  else if(hotkey == DFG_CUT)
-  {
-    m_dfgWidget->getUIController()->cmdCut();
-  }
-  else if(hotkey == DFG_PASTE)
-  {
-    m_dfgWidget->getUIController()->cmdPaste();
   }
   else if(hotkey == DFG_NEW_SCENE)
   {
@@ -507,35 +476,15 @@ void MainWindow::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QStr
   {
     saveGraph(false);
   }
-  else if(hotkey == DFG_EDIT_PROPERTIES)
-  {
-    m_dfgWidget->editPropertiesForCurrentSelection();
-  }
-  else if(hotkey == DFG_RELAX_NODES)
-  {
-    m_dfgWidget->getUIController()->relaxNodes();
-  }
   else if(hotkey == DFG_TOGGLE_MANIPULATION)
   {
     // Make sure we use the Action path, so menu's "checked" state is updated
     if( m_manipAction )
       m_manipAction->trigger();
   }
-  else if(hotkey == DFG_RESET_ZOOM)
+  else
   {
-    m_dfgWidget->onResetZoom();
-  }
-  else if(hotkey == DFG_COLLAPSE_LEVEL_1)
-  {
-    m_dfgWidget->getUIController()->collapseSelectedNodes(2);
-  }
-  else if(hotkey == DFG_COLLAPSE_LEVEL_2)
-  {
-    m_dfgWidget->getUIController()->collapseSelectedNodes(1);
-  }
-  else if(hotkey == DFG_COLLAPSE_LEVEL_3)
-  {
-    m_dfgWidget->getUIController()->collapseSelectedNodes(0);
+    m_dfgWidget->onHotkeyPressed(key, modifiers, hotkey);
   }
 }
 
@@ -728,7 +677,7 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
     graph->defineHotkey(Qt::Key_3,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_3);
           
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
-      this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
+      this, SLOT(onHotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
     QObject::connect(graph, SIGNAL(nodeInspectRequested(FabricUI::GraphView::Node*)),
       this, SLOT(onNodeInspectRequested(FabricUI::GraphView::Node*)));
     QObject::connect(graph, SIGNAL(nodeEditRequested(FabricUI::GraphView::Node*)),
