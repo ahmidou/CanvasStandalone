@@ -1081,7 +1081,6 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       m_loadGraphAction->setShortcut(QKeySequence::Open);
       m_saveGraphAction = menu->addAction("Save Graph");
       m_saveGraphAction->setShortcut(QKeySequence::Save);
-      m_saveGraphAction->setEnabled(false);
       m_saveGraphAsAction = menu->addAction("Save Graph As...");
       m_saveGraphAsAction->setShortcut(QKeySequence::SaveAs);
     
