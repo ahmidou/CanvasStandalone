@@ -655,25 +655,26 @@ void MainWindow::onGraphSet(FabricUI::GraphView::Graph * graph)
   if(graph != m_setGraph)
   {
     GraphView::Graph * graph = m_dfgWidget->getUIGraph();
-    graph->defineHotkey(Qt::Key_Delete,   Qt::NoModifier,     DFG_DELETE);
-    graph->defineHotkey(Qt::Key_Backspace,Qt::NoModifier,     DFG_DELETE_2);
-    graph->defineHotkey(Qt::Key_F5,       Qt::NoModifier,     DFG_EXECUTE);
-    graph->defineHotkey(Qt::Key_F,        Qt::NoModifier,     DFG_FRAME_SELECTED);
-    graph->defineHotkey(Qt::Key_A,        Qt::NoModifier,     DFG_FRAME_ALL);
-    graph->defineHotkey(Qt::Key_Tab,      Qt::NoModifier,     DFG_TAB_SEARCH);
-    graph->defineHotkey(Qt::Key_C,        Qt::ControlModifier,DFG_COPY);
-    graph->defineHotkey(Qt::Key_V,        Qt::ControlModifier,DFG_PASTE);
-    graph->defineHotkey(Qt::Key_X,        Qt::ControlModifier,DFG_CUT);
-    graph->defineHotkey(Qt::Key_N,        Qt::ControlModifier,DFG_NEW_SCENE);
-    graph->defineHotkey(Qt::Key_O,        Qt::ControlModifier,DFG_OPEN_SCENE);
-    graph->defineHotkey(Qt::Key_S,        Qt::ControlModifier,DFG_SAVE_SCENE);
-    graph->defineHotkey(Qt::Key_F2,       Qt::NoModifier,     DFG_EDIT_PROPERTIES);
-    graph->defineHotkey(Qt::Key_R,        Qt::ControlModifier,DFG_RELAX_NODES);
-    graph->defineHotkey(Qt::Key_Q,        Qt::NoModifier,     DFG_TOGGLE_MANIPULATION);
-    graph->defineHotkey(Qt::Key_0,        Qt::ControlModifier,DFG_RESET_ZOOM);
-    graph->defineHotkey(Qt::Key_1,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_1);
-    graph->defineHotkey(Qt::Key_2,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_2);
-    graph->defineHotkey(Qt::Key_3,        Qt::NoModifier,     DFG_COLLAPSE_LEVEL_3);
+    graph->defineHotkey(Qt::Key_Delete,     Qt::NoModifier,       DFG_DELETE);
+    graph->defineHotkey(Qt::Key_Backspace,  Qt::NoModifier,       DFG_DELETE_2);
+    graph->defineHotkey(Qt::Key_F5,         Qt::NoModifier,       DFG_EXECUTE);
+    graph->defineHotkey(Qt::Key_F,          Qt::NoModifier,       DFG_FRAME_SELECTED);
+    graph->defineHotkey(Qt::Key_A,          Qt::NoModifier,       DFG_FRAME_ALL);
+    graph->defineHotkey(Qt::Key_Tab,        Qt::NoModifier,       DFG_TAB_SEARCH);
+    graph->defineHotkey(Qt::Key_A,          Qt::ControlModifier,  DFG_SELECT_ALL);
+    graph->defineHotkey(Qt::Key_C,          Qt::ControlModifier,  DFG_COPY);
+    graph->defineHotkey(Qt::Key_V,          Qt::ControlModifier,  DFG_PASTE);
+    graph->defineHotkey(Qt::Key_X,          Qt::ControlModifier,  DFG_CUT);
+    graph->defineHotkey(Qt::Key_N,          Qt::ControlModifier,  DFG_NEW_SCENE);
+    graph->defineHotkey(Qt::Key_O,          Qt::ControlModifier,  DFG_OPEN_SCENE);
+    graph->defineHotkey(Qt::Key_S,          Qt::ControlModifier,  DFG_SAVE_SCENE);
+    graph->defineHotkey(Qt::Key_F2,         Qt::NoModifier,       DFG_EDIT_PROPERTIES);
+    graph->defineHotkey(Qt::Key_R,          Qt::ControlModifier,  DFG_RELAX_NODES);
+    graph->defineHotkey(Qt::Key_Q,          Qt::NoModifier,       DFG_TOGGLE_MANIPULATION);
+    graph->defineHotkey(Qt::Key_0,          Qt::ControlModifier,  DFG_RESET_ZOOM);
+    graph->defineHotkey(Qt::Key_1,          Qt::NoModifier,       DFG_COLLAPSE_LEVEL_1);
+    graph->defineHotkey(Qt::Key_2,          Qt::NoModifier,       DFG_COLLAPSE_LEVEL_2);
+    graph->defineHotkey(Qt::Key_3,          Qt::NoModifier,       DFG_COLLAPSE_LEVEL_3);
           
     QObject::connect(graph, SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)),
       this, SLOT(onHotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
@@ -889,7 +890,6 @@ void MainWindow::loadGraph( QString const &filePath )
         {
           printf("Exception: %s\n", e.getDesc_cstr());
         }
-
       }
 
       emit contentChanged();
