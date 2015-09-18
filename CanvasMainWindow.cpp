@@ -741,7 +741,7 @@ void MainWindow::onNewGraph()
       m_dfgWidget->getUIController();
 
     FabricCore::DFGBinding binding = dfgController->getBinding();
-    binding.flush();
+    binding.deallocValues();
 
     m_dfgValueEditor->clear();
 
@@ -810,7 +810,7 @@ void MainWindow::loadGraph( QString const &filePath )
       m_dfgWidget->getUIController();
 
     FabricCore::DFGBinding binding = dfgController->getBinding();
-    binding.flush();
+    binding.deallocValues();
 
     m_dfgValueEditor->clear();
 
