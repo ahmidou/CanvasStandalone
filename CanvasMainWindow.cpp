@@ -1155,26 +1155,30 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
   {
     if(prefix)
     {
-      m_setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-      m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
-      m_setStageVisibleAction->setCheckable( true );
-      m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
-     
       // [Julien] FE-4965 Glitches with "Display Stage/Grid" and "Use Stage"
-      // Use the method onDisplayStage to manage the stage/grid states.
-      QObject::connect(
-        m_setStageVisibleAction, SIGNAL(toggled(bool)),
-        this, SLOT(onDisplayStage(bool)) 
-        );
+      // We choose to remove the stage and display the grid only.
+      m_viewport->setUsingStage(false);
+      /*
+        m_setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
+        m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
+        m_setStageVisibleAction->setCheckable( true );
+        m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+       
+       
+        QObject::connect(
+          m_setStageVisibleAction, SIGNAL(toggled(bool)),
+          this, SLOT(onDisplayStage(bool)) 
+          );
 
-      m_setUsingStageAction = new QAction( "Use &Stage", 0 );
-      m_setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
-      m_setUsingStageAction->setCheckable( true );
-      m_setUsingStageAction->setChecked( m_viewport->isUsingStage() );
-      QObject::connect(
-        m_setUsingStageAction, SIGNAL(toggled(bool)),
-        m_viewport, SLOT(setUsingStage(bool))
-        );
+        m_setUsingStageAction = new QAction( "Use &Stage", 0 );
+        m_setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
+        m_setUsingStageAction->setCheckable( true );
+        m_setUsingStageAction->setChecked( m_viewport->isUsingStage() );
+        QObject::connect(
+          m_setUsingStageAction, SIGNAL(toggled(bool)),
+          m_viewport, SLOT(setUsingStage(bool))
+          );
+      */
 
       m_resetCameraAction = new QAction( "&Reset Camera", m_viewport );
       m_resetCameraAction->setShortcut(Qt::Key_R);
@@ -1199,9 +1203,9 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
         this, SLOT(setBlockCompilations(bool))
         );
 
-      menu->addAction( m_setStageVisibleAction );
-      menu->addAction( m_setUsingStageAction );
-      menu->addSeparator();
+      //menu->addAction( m_setStageVisibleAction );
+      //menu->addAction( m_setUsingStageAction );
+      //menu->addSeparator();
       menu->addAction( m_resetCameraAction );
       menu->addSeparator();
       menu->addAction( m_clearLogAction );
