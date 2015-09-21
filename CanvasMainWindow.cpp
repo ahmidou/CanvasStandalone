@@ -750,9 +750,18 @@ void MainWindow::onNewGraph()
 
     m_host.flushUndoRedo();
     m_qUndoStack.clear();
-    m_qUndoView->setEmptyLabel( "New Graph" );
-
     m_viewport->clearInlineDrawing();
+    QCoreApplication::processEvents();
+
+    // Note: the previous binding is no longer functional;
+    //       create the new one before resetting the timeline options
+
+    binding = m_host.createBindingToNewGraph();
+    m_lastSavedBindingVersion = binding.getVersion();
+    FabricCore::DFGExec exec = binding.getExec();
+    m_timelinePortIndex = -1;
+
+    dfgController->setBindingExec( binding, FTL::StrRef(), exec );
 
     m_timeLine->setTimeRange(TimeRange_Default_Frame_In, TimeRange_Default_Frame_Out);
     m_timeLine->setLoopMode(1);
@@ -760,14 +769,8 @@ void MainWindow::onNewGraph()
     m_timeLine->updateTime(TimeRange_Default_Frame_In, true);
 
     QCoreApplication::processEvents();
+    m_qUndoView->setEmptyLabel( "New Graph" );
 
-    m_timelinePortIndex = -1;
-
-    binding = m_host.createBindingToNewGraph();
-    m_lastSavedBindingVersion = binding.getVersion();
-    FabricCore::DFGExec exec = binding.getExec();
-
-    dfgController->setBindingExec( binding, FTL::StrRef(), exec );
     onSidePanelInspectRequested();
 
     emit contentChanged();
