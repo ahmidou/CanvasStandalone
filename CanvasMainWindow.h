@@ -85,7 +85,9 @@ public slots:
   void enableShortCuts(bool enabled);
 
 private slots:
-
+  /// \internal 
+  /// Manages to gid/stage display
+  void onDisplayStage(bool useStage);
   void onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix);
   void autosave();
 

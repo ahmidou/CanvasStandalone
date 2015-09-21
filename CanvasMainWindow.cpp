@@ -1075,6 +1075,26 @@ void MainWindow::enableShortCuts(bool enabled)
     m_blockCompilationsAction->blockSignals(enabled);
 }
 
+/// \internal 
+/// Manages to gid/stage display
+void MainWindow::onDisplayStage(bool useStage) {
+
+  m_viewport->setStageVisible(useStage);
+
+  // If stage is not active, don't allow using it
+  if(!m_viewport->isStageVisible())
+  {
+    m_setUsingStageAction->setCheckable( false );
+    m_setUsingStageAction->setChecked(false);
+  }
+
+  // Otherwise, allow stage use.
+  else {
+    m_setUsingStageAction->setCheckable( true );
+    m_setUsingStageAction->setChecked( m_viewport->isUsingStage());
+  }
+}
+
 void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix)
 {
   if(name == "File")
@@ -1118,7 +1138,7 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
     else
     {
       menu->addSeparator();
-      m_manipAction = new QAction( "Toggle Manipulation", m_viewport );
+      m_manipAction = new QAction( DFG_TOGGLE_MANIPULATION, m_viewport );
       m_manipAction->setShortcut(Qt::Key_Q);
       m_manipAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
       m_manipAction->setCheckable( true );
@@ -1139,9 +1159,12 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
       m_setStageVisibleAction->setCheckable( true );
       m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
+     
+      // [Julien] FE-4965 Glitches with "Display Stage/Grid" and "Use Stage"
+      // Use the method onDisplayStage to manage the stage/grid states.
       QObject::connect(
         m_setStageVisibleAction, SIGNAL(toggled(bool)),
-        m_viewport, SLOT(setStageVisible(bool))
+        this, SLOT(onDisplayStage(bool)) 
         );
 
       m_setUsingStageAction = new QAction( "Use &Stage", 0 );
