@@ -1203,6 +1203,7 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
         this, SLOT(setBlockCompilations(bool))
         );
 
+      // [Julien] FE-4965
       //menu->addAction( m_setStageVisibleAction );
       //menu->addAction( m_setUsingStageAction );
       //menu->addSeparator();
