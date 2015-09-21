@@ -85,9 +85,6 @@ public slots:
   void enableShortCuts(bool enabled);
 
 private slots:
-  /// \internal 
-  /// Manages to gid/stage display
-  void onDisplayStage(bool useStage);
   void onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix);
   void autosave();
 
@@ -141,7 +138,7 @@ private:
   QAction *m_quitAction;
   QAction *m_manipAction;
 
-  QAction * m_setStageVisibleAction;
+  QAction * m_setGridVisibleAction;
   QAction * m_setUsingStageAction;
   QAction * m_resetCameraAction;
   QAction * m_clearLogAction;

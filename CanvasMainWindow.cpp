@@ -146,7 +146,7 @@ MainWindow::MainWindow(
   m_saveGraphAsAction = NULL;
   m_quitAction = NULL;
   m_manipAction = NULL;
-  m_setStageVisibleAction = NULL;
+  m_setGridVisibleAction = NULL;
   m_setUsingStageAction = NULL;
   m_resetCameraAction = NULL;
   m_clearLogAction = NULL;
@@ -1063,8 +1063,8 @@ void MainWindow::enableShortCuts(bool enabled)
     m_quitAction->blockSignals(enabled);
   if(m_manipAction)
     m_manipAction->blockSignals(enabled);
-  if(m_setStageVisibleAction)
-    m_setStageVisibleAction->blockSignals(enabled);
+  if(m_setGridVisibleAction)
+    m_setGridVisibleAction->blockSignals(enabled);
   if(m_setUsingStageAction)
     m_setUsingStageAction->blockSignals(enabled);
   if(m_resetCameraAction)
@@ -1074,27 +1074,7 @@ void MainWindow::enableShortCuts(bool enabled)
   if(m_blockCompilationsAction)
     m_blockCompilationsAction->blockSignals(enabled);
 }
-
-/// \internal 
-/// Manages to gid/stage display
-void MainWindow::onDisplayStage(bool useStage) {
-
-  m_viewport->setStageVisible(useStage);
-
-  // If stage is not active, don't allow using it
-  if(!m_viewport->isStageVisible())
-  {
-    m_setUsingStageAction->setCheckable( false );
-    m_setUsingStageAction->setChecked(false);
-  }
-
-  // Otherwise, allow stage use.
-  else {
-    m_setUsingStageAction->setCheckable( true );
-    m_setUsingStageAction->setChecked( m_viewport->isUsingStage());
-  }
-}
-
+ 
 void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bool prefix)
 {
   if(name == "File")
@@ -1158,18 +1138,18 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
       // [Julien] FE-4965 Glitches with "Display Stage/Grid" and "Use Stage"
       // We choose to remove the stage and display the grid only.
       m_viewport->setUsingStage(false);
+    
+      m_setGridVisibleAction = new QAction("&Display Grid", 0 );
+      m_setGridVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
+      m_setGridVisibleAction->setCheckable( true );
+      m_setGridVisibleAction->setChecked( m_viewport->isStageVisible() );
+     
+      QObject::connect(
+        m_setGridVisibleAction, SIGNAL(toggled(bool)),
+        m_viewport, SLOT(setStageVisible(bool)) 
+        );
+      
       /*
-        m_setStageVisibleAction = new QAction( "&Display Stage/Grid", 0 );
-        m_setStageVisibleAction->setShortcut(Qt::CTRL + Qt::Key_G);
-        m_setStageVisibleAction->setCheckable( true );
-        m_setStageVisibleAction->setChecked( m_viewport->isStageVisible() );
-       
-       
-        QObject::connect(
-          m_setStageVisibleAction, SIGNAL(toggled(bool)),
-          this, SLOT(onDisplayStage(bool)) 
-          );
-
         m_setUsingStageAction = new QAction( "Use &Stage", 0 );
         m_setUsingStageAction->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_G);
         m_setUsingStageAction->setCheckable( true );
@@ -1204,9 +1184,9 @@ void MainWindow::onAdditionalMenuActionsRequested(QString name, QMenu * menu, bo
         );
 
       // [Julien] FE-4965
-      //menu->addAction( m_setStageVisibleAction );
+      menu->addAction( m_setGridVisibleAction );
       //menu->addAction( m_setUsingStageAction );
-      //menu->addSeparator();
+      menu->addSeparator();
       menu->addAction( m_resetCameraAction );
       menu->addSeparator();
       menu->addAction( m_clearLogAction );
