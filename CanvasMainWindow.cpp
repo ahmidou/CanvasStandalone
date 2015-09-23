@@ -42,7 +42,12 @@ void MainWindow::CoreStatusCallback(
   {
     try
     {
-      FabricUI::HandleLicenseData( mainWindow, mainWindow->m_client, payload );
+      FabricUI::HandleLicenseData(
+        mainWindow,
+        mainWindow->m_client,
+        payload,
+        true // modalDialogs
+        );
     }
     catch ( FabricCore::Exception e )
     {
